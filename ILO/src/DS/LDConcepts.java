@@ -25,7 +25,7 @@ public class LDConcepts {
 	{
 
 		Boolean booleanask = false ;
-		if ( !(booleanask = EntityMentionDetectionLLD(mention)))
+		if ( true && !(booleanask = EntityMentionDetectionLLD(mention)))
 			if (!(booleanask = EntityMentionDetectionBio(mention)))
 				booleanask = EntityMentionDetectionLOD(mention) ;
 		

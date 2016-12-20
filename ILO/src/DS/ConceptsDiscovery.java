@@ -43,7 +43,7 @@ public class ConceptsDiscovery {
             
 	}
 	
-	public static double getconcepts(Map<String, List<String>> titles)
+	public static Map<String, Integer> getconcepts(Map<String, List<String>> titles)
 	{
 		
 		double avgRecall = 0  ; 
@@ -62,12 +62,13 @@ public class ConceptsDiscovery {
 	    }
 	    
 		int counter = 0 ;
+		Map<String, Integer> allconcepts = new HashMap<String, Integer>();
 		for(String title : titles.keySet())
 		{
 			
 			counter++ ;
 			List<String> GoldSndconcepts = titles.get(title); 
-			Map<String, Integer> allconcepts = new HashMap<String, Integer>();  
+			  
 			try {
 				
 				// find all concepts that exist in the UMLS
@@ -171,7 +172,7 @@ public class ConceptsDiscovery {
 			
 		}
 			
-		return avgFmeasure ;
+		return allconcepts ;
 	}
 	public static void getconcepts(String Sent)
 	{

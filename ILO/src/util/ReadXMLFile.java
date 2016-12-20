@@ -72,7 +72,7 @@ public class ReadXMLFile {
 		doc.getDocumentElement().normalize();
 
 		NodeList passageList = doc.getElementsByTagName("passage");
-		for (int i = 0; i < passageList.getLength(); i++)
+		for (int i = 0; i < passageList.getLength() && i < 1 ; i++)
 		{
 			List<String> conclist = new ArrayList<String>() ;
 			NodeList childList = passageList.item(i).getChildNodes();
@@ -164,4 +164,6 @@ public class ReadXMLFile {
 			}
 		      return dictionary;
 	   }
+	 
+
 	}
