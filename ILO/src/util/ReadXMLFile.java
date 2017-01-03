@@ -16,6 +16,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,6 +126,91 @@ public class ReadXMLFile {
 	  } ;
   
   
+		public static  void Serializedsrc(Map<String, Dataset> dictionary,String fileout) throws IOException
+		 {
+
+		     try
+		     {
+		    	 // Create output stream.
+		         FileOutputStream fileOut =
+		         new FileOutputStream(fileout);
+		         ObjectOutputStream out = new ObjectOutputStream(fileOut);
+		         out.writeObject(dictionary);
+		         out.close();
+		         fileOut.close();
+		         System.out.printf("Serialized data is saved in" + fileout);
+		     }catch(IOException i)
+		     {
+		          i.printStackTrace();
+		     }
+		 }  
+		
+		 @SuppressWarnings("resource")
+		public static  Map<String, Dataset> Deserializersrc(String fileout) 
+		   {
+			       Map<String, Dataset> dictionary ;
+				   FileInputStream fileIn;
+				try {
+					fileIn = new FileInputStream(fileout);
+					
+	
+			        ObjectInputStream in = new ObjectInputStream(fileIn);
+			        dictionary = (Map<String, Dataset>)in.readObject();
+
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				}
+			      return dictionary;
+		   }
+	  
+		public static  void Serializeddir(Map<String, Integer> dictionary,String fileout) throws IOException
+		 {
+
+		     try
+		     {
+		    	 // Create output stream.
+		         FileOutputStream fileOut =
+		         new FileOutputStream(fileout);
+			     // Create XML encoder.
+			     XMLEncoder xenc = new XMLEncoder(fileOut);
+		
+			     // Write object.
+			     xenc.writeObject(dictionary);
+			     xenc.close();
+		         fileOut.close();
+		         System.out.printf("Serialized data is saved in" + fileout);
+		     }catch(IOException i)
+		     {
+		          i.printStackTrace();
+		     }
+		 }  
+		 public static  Map<String, Integer> Deserializedir(String fileout)
+		   {
+			       Map<String, Integer> dictionary ;
+				   FileInputStream fileIn;
+				try {
+					fileIn = new FileInputStream(fileout);
+				
+				   XMLDecoder decoder =  new XMLDecoder(fileIn);
+				   dictionary  = (Map<String, Integer>)decoder.readObject();
+				   decoder.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				}
+			      return dictionary;
+		   }
 	public static  void Serialized(Map<String, List<String>> dictionary,String fileout) throws IOException
 	 {
 

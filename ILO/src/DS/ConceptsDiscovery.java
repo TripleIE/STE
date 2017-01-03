@@ -1,5 +1,6 @@
 package DS;
 
+import edu.stanford.nlp.trees.Tree;
 import gov.nih.nlm.nls.metamap.MetaMapApi;
 import gov.nih.nlm.nls.metamap.MetaMapApiImpl;
 
@@ -11,13 +12,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import TextProcess.NLPEngine;
 import TextProcess.removestopwords;
 import util.NGramAnalyzer;
 import util.ReadXMLFile;
 import util.readfiles;
+import util.surfaceFormDiscovery;
 public class ConceptsDiscovery {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 /*		// TODO Auto-generated method stub
 		String CLINICALFOLDER = "C:\\Users\\mazina\\Desktop\\School\\Khalid\\Paper\\SCKIE\\related work\\data set\\cellfinder1_brat.tar\\15971941.txt";
 		String ClinicalNote = null ;
@@ -35,15 +38,12 @@ public class ConceptsDiscovery {
             getconcepts("Famotidine-associated delirium. A series of six cases.".toLowerCase()) ; */
             
 		Map<String, List<String>> titles =  ReadXMLFile.ReadCDR_TestSet_BioC()  ; 
-		String result  = getmeasureLODconcepts(titles);
-		System.out.println(result);
-            
-            
-            
+		Map<String, List<String>> result  = getcachconcepts(titles);
+		ReadXMLFile.Serialized(result, "F:\\eclipse64\\eclipse\\conceptDictionary");
+		System.out.println(result);                      
             
 	}
-	
-	public static Map<String, Integer> getconcepts(Map<String, List<String>> titles)
+	public static Map<String, List<String>> getcachconcepts(Map<String, List<String>> titles) throws IOException
 	{
 		
 		double avgRecall = 0  ; 
@@ -66,8 +66,7 @@ public class ConceptsDiscovery {
 		for(String title : titles.keySet())
 		{
 			
-			counter++ ;
-			List<String> GoldSndconcepts = titles.get(title); 
+			counter++ ; 
 			  
 			try {
 				
@@ -125,10 +124,146 @@ public class ConceptsDiscovery {
 					// no need to examine the stopwords
 					if (!mention.isEmpty() && !removestopwords.removestopwordsingle(mention.trim()) && LDConcepts.EntityMentionDetection(mention) ) 
 						lodconcepts.put(mention, 1) ;
+				}				
+				allconcepts.putAll(lodconcepts);
+				
+
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		// get the surface form & synonym of each concepts 
+		   Map<String, List<String>> diect = new HashMap<String, List<String>>();
+		   for (String concept:allconcepts.keySet())
+		   {
+			   Map<String, Integer> surfaceForm = null ;
+			   surfaceForm  = surfaceFormDiscovery.getsurfaceFormMesh(concept); 
+			   List<String> forms = new ArrayList<String>();
+			   if (surfaceForm != null)
+			   {
+				   
+				   for(String term : surfaceForm.keySet()) 
+				   {
+					   String[] tokens  = term.split("@") ;
+					   term = tokens[0] ; 
+					   forms.add(term) ;
+				   }
+			   }
+			   diect.put(concept, forms) ;
+		   }
+	
+		return diect ;
+	}
+	
+	public static Map<String, Integer> getconcepts(Map<String, List<String>> titles)
+	{
+		
+		double avgRecall = 0  ; 
+		double avgPrecision = 0 ;
+		double avgFmeasure = 0 ; 
+		
+		MetaMapApi api = new MetaMapApiImpl();
+		List<String> theOptions = new ArrayList<String>();
+	    theOptions.add("-y");  // turn on Word Sense Disambiguation
+	    theOptions.add("-u");  //  unique abrevation 
+	    theOptions.add("--negex");  
+	    theOptions.add("-v");
+	    theOptions.add("-c");   // use relaxed model that  containing internal syntactic structure, such as conjunction.
+	    if (theOptions.size() > 0) {
+	      api.setOptions(theOptions);
+	    }
+	    
+		int counter = 0 ;
+		Map<String, Integer> allconcepts = new HashMap<String, Integer>();
+		NLPEngine nlpprocessor = new NLPEngine() ;
+
+		for(String title : titles.keySet())
+		{
+			Tree parsertree = nlpprocessor.getParseTreeSentence(title) ;
+			List<String> verbs = new ArrayList<String>() ;
+			nlpprocessor.getVerbs(parsertree, verbs);
+			
+			counter++ ;
+			List<String> GoldSndconcepts = titles.get(title); 
+			  
+			try {
+				
+				// find all concepts that exist in the UMLS
+				Map<String, Integer> metmapconcepts = MetamapConcepts.getconcepts(title,api) ;
+				String[] arr = new String[metmapconcepts.size()] ;
+				int i= 0 ; 
+				for( String concept : metmapconcepts.keySet())
+				{
+					arr[i] = concept ;
+					i++ ; 
 				}
 				
 				
+			// sort them Descending  
+				arr = insertionSort(arr); 
+				// pruning the concepts 
+				for( String concept : arr)
+				{
+					if ( title.contains(concept.toLowerCase()) )
+					{
+						title = title.replace(concept.toLowerCase(), "") ;
+					}
+					else
+					{
+						metmapconcepts.remove(concept) ;
+					}
+				}
+				
+
+				
+				for (String verb :verbs )
+				{
+					metmapconcepts.remove(verb) ;
+				}
+
+				allconcepts.putAll(metmapconcepts);
+				
+/*				Map<String, Integer> nerdconcepts = nerd.getNerdEntities(title) ;
+				String[] arrnerd = new String[nerdconcepts.size()] ;
+				i = 0 ; 
+				for( String concept : nerdconcepts.keySet())
+				{
+					arrnerd[i] = concept ;
+					i++ ; 
+				}
+				
+				arrnerd = insertionSort(arrnerd); 
+				for( String concept : arrnerd)
+				{
+					title = title.replace(concept.toLowerCase(), "") ;
+				}  */
+				
+				
+				Map<String, Integer> lodconcepts = new HashMap<String, Integer>();
+				Map<String, Integer> mentions = new HashMap<String, Integer>();
+				
+				mentions = NGramAnalyzer.entities(1,3, title) ;
+				
+				for(String mention : mentions.keySet())
+				{
+					// no need to examine the stopwords
+					if (!mention.isEmpty() && !removestopwords.removestopwordsingle(mention.trim()) && LDConcepts.EntityMentionDetection(mention) ) 
+						lodconcepts.put(mention, 1) ;
+				}
+				
+				
+				for (String verb :verbs )
+				{
+					lodconcepts.remove(verb) ;
+				}
 				allconcepts.putAll(lodconcepts);
+				
+
+				
 				
 				// measure the recall precision and  F-measure 
 				double relevent = 0 ;
@@ -169,9 +304,10 @@ public class ConceptsDiscovery {
 				e.printStackTrace();
 			}
 			
-			
+
 		}
-			
+		
+
 		return allconcepts ;
 	}
 	public static void getconcepts(String Sent)

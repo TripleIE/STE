@@ -25,7 +25,7 @@ public class LDConcepts {
 	{
 
 		Boolean booleanask = false ;
-		if ( true && !(booleanask = EntityMentionDetectionLLD(mention)))
+		//if ( true && !(booleanask = EntityMentionDetectionLLD(mention)))
 			if (!(booleanask = EntityMentionDetectionBio(mention)))
 				booleanask = EntityMentionDetectionLOD(mention) ;
 		
@@ -163,7 +163,7 @@ public class LDConcepts {
 			    "where { " +
 		                   "?concept rdfs:label ?label." +
 			               "?label <bif:contains> '" +"\"" +   mention +  "\"" + "'." + 
-		                   "?concept rdfs:comment|dbpedia-owl:abstract ?def." +   // concept shell have a definition 
+		                   //"?concept rdfs:comment|dbpedia-owl:abstract ?def." +   // concept shell have a definition 
 		                  
 		           " } "  ;
 

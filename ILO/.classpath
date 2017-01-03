@@ -31,5 +31,7 @@
 	<classpathentry kind="lib" path="E:/Ptriple/Vendor/apache-jena-2.12.1/lib/jsonld-java-0.5.0.jar"/>
 	<classpathentry kind="lib" path="E:/Ptriple/Vendor/apache-jena-2.12.1/lib/libthrift-0.9.1.jar"/>
 	<classpathentry kind="lib" path="E:/Ptriple/Vendor/apache-jena-2.12.1/lib/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="E:/Ptriple/Vendor/ws4j-1.0.1.jar"/>
+	<classpathentry kind="lib" path="E:/Ptriple/Vendor/json-simple-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

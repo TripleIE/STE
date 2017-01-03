@@ -50,9 +50,10 @@ public class NLPEngine {
 		
 		// creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution 
 	    Properties props = new Properties();
-	    props.put("pos.model", "E:\\Ptriple\\Vendor\\parserenglish-left3words-distsim.tagger");
-	    props.put("ner.model", "E:\\Ptriple\\Vendor\\english.all.3class.caseless.distsim.crf.ser.gz");
-	    props.put("parse.model", "E:\\Ptriple\\Vendor\\englishPCFG.caseless.ser.gz");
+	     props.put("pos.model", "E:\\Ptriple\\Vendor\\parser\\english-left3words-distsim.tagger");
+	  //  props.put("pos.model", "C:\\Users\\mazina\\Desktop\\School\\Khalid\\Paper\\Everything2III\\english-left3words-distsim.tagger");
+	    props.put("ner.model", "E:\\Ptriple\\Vendor\\parser\\english.all.3class.caseless.distsim.crf.ser.gz");
+	    props.put("parse.model", "E:\\Ptriple\\Vendor\\parser\\englishPCFG.caseless.ser.gz");
 	    props.setProperty("annotators", "tokenize, ssplit, pos, lemma, parse");
 	   
 	    StanfordCoreNLP pipeline = new StanfordCoreNLP(props);

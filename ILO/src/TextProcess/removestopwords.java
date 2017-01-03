@@ -34,6 +34,9 @@ public class removestopwords {
 		s.replaceAll(".", "");
     	String[] words = s.split("\\s+");
     	boolean _add ;
+    	try {
+    		
+    	
     	for (String word : words)
     	{
     		_add = true ; 
@@ -56,7 +59,7 @@ public class removestopwords {
 	    		// get the item as string
 	    		for (int j = 0; j < stopWordsofwordnet.length; j++)
 	    		{
-		    		if (stopWordsofwordnet[j].contains(wordsList.get(i)))
+		    		if (stopWordsofwordnet[j].toLowerCase().equals(wordsList.get(i).toLowerCase()))
 		    		{
 		    			wordsList.remove(i);
 		    		}
@@ -66,6 +69,11 @@ public class removestopwords {
 //    		{
 //    			System.out.println(str+"");
 //    		}
+    	}
+    	catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	return wordsList ;	
 	}
 	
@@ -92,7 +100,7 @@ public class removestopwords {
 	    	for (String word : words)
 	    	{
 	    	
-	    		if (stopWordsofwordnet[j].contains(word))
+	    		if (stopWordsofwordnet[j].toLowerCase().equals(word.toLowerCase()))
 	    		{
 	    			return true ;
 	    		}

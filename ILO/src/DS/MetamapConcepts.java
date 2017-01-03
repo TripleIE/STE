@@ -107,7 +107,7 @@ public class MetamapConcepts {
 		    	              */
 		    	              
 		    	              
-		    	              if(mapEv.getNegationStatus() != 1 && mapEv.getScore() <= -300 )
+		    	              if(  mapEv.getScore() <= -300 )
 		    	              {
 		    	            	  List<String> s = mapEv.getMatchedWords() ; //mapEv.getConceptName(); 
 		    	            	  String entity ="" ;
@@ -241,5 +241,101 @@ public class MetamapConcepts {
 	        }
 		    
 		    return concepttypes ;
-	}
+	}public static List<String> getconceptsforms(String sentence, MetaMapApi api) throws Exception
+	{
+	    sentence = sentence.toLowerCase() ;
+		
+
+		Map<String, Integer>  concepttypes = new HashMap<String, Integer>(); 
+		
+	 	List<Result> resultList = api.processCitationsFromString(sentence);
+	    Result result = resultList.get(0);
+	    System.out.println(result);
+	    List<String> conceptsIdentified = new ArrayList<String>();
+	    List<String> actionsIdentified = new ArrayList<String>();
+	    List<Negation> negList = result.getNegations();
+	    
+	    if (negList.size() > 0)
+	    {
+	      System.out.println("Negations:");
+	      for (Negation e: negList) {
+	        System.out.println("type: " + e.getType());
+	        System.out.print("Trigger: " + e.getTrigger() + ": [");
+	        for (Position pos: e.getTriggerPositionList()) {
+	          System.out.print(pos  + ",");
+	        }
+	        System.out.println("]");
+	        System.out.print("ConceptPairs: [");
+	        for (ConceptPair pair: e.getConceptPairList()) {
+	          System.out.print(pair + ",");
+	        }
+	        System.out.println("]");
+	        System.out.print("ConceptPositionList: [");
+	        for (Position pos: e.getConceptPositionList()) {
+	          System.out.print(pos + ",");
+	        }
+	        System.out.println("]");
+	      }
+	    } else {
+	    	System.out.println(" None.");
+	    }
+	    try {
+	    	for (Utterance utterance: result.getUtteranceList()) {
+	    		System.out.println("Utterance:");
+	    		System.out.println(" Id: " + utterance.getId());
+	    		System.out.println(" Utterance text: " + utterance.getString());
+	    		System.out.println(" Position: " + utterance.getPosition());
+	    		for (PCM pcm: utterance.getPCMList()) {
+	    			System.out.println("Phrase:");
+	    			  System.out.println(" text: " + pcm.getPhrase().getPhraseText());
+	    			  System.out.println("Mappings:");
+	    	          for (Mapping map: pcm.getMappingList()) {
+	    	            System.out.println(" Map Score: " + map.getScore());
+	    	            for (Ev mapEv: map.getEvList()) {
+	    	              System.out.println("   Score: " + mapEv.getScore());
+	    	              System.out.println("   Concept Id: " + mapEv.getConceptId());
+	    	              System.out.println("   Concept Name: " + mapEv.getConceptName());
+	    	              System.out.println("   Preferred Name: " + mapEv.getPreferredName());
+	    	              System.out.println("   Matched Words: " + mapEv.getMatchedWords());
+	    	              System.out.println("   Semantic Types: " + mapEv.getSemanticTypes());
+	    	              System.out.println("   MatchMap: " + mapEv.getMatchMap());
+	    	              System.out.println("   MatchMap alt. repr.: " + mapEv.getMatchMapList());
+	    	              System.out.println("   is Head?: " + mapEv.isHead());
+	    	              System.out.println("   is Overmatch?: " + mapEv.isOvermatch());
+	    	              System.out.println("   Sources: " + mapEv.getSources());
+	    	              System.out.println("   Positional Info: " + mapEv.getPositionalInfo());
+	    	              System.out.println("   Negation Info: " + mapEv.getNegationStatus());
+	    	              
+	    	              
+	    	              boolean b = true;
+	    	              /*List<String> parse = mapEv.getSources();
+	    	              if(parse.size() < 2)
+	    	              {
+	    	            	  b = false;
+	    	              }
+	    	              */
+	    	              
+	    	              
+	    	              if( mapEv.getScore() <= -300 )
+	    	              {
+	    	            	  String cName = mapEv.getConceptName() ;  
+	    	            	  String cPrefName = mapEv.getPreferredName() ; 
+	    	            	  conceptsIdentified.add(cName.toLowerCase());
+	    	            	  conceptsIdentified.add(cPrefName.toLowerCase());
+	    	            	 // }
+	    	              }
+	    	              
+	    	              
+	    	            }
+	    		}
+	    	}
+			
+		}
+	    } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}  
+	    return conceptsIdentified ;
+}
+	
 }

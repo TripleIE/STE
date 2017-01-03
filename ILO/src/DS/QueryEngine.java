@@ -140,7 +140,61 @@ public class QueryEngine {
 	 
 		
 /*************************************** Resources lookup Section******************************************************************/
-		
+	  public static List<String> BeeResourceLookup(String mention,Integer limit)
+		{
+		  List<String> Linkuris = new ArrayList<String>() ;
+			
+		try
+			{
+
+				String queryString=
+						"PREFIX p: <http://dbpedia.org/property/>"+
+						"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+						"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+						"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+						"PREFIX geo: <http://www.georss.org/georss/>"+
+						"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+						"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"+
+				        "Select ?entity " +
+					    "{ " +
+				                   "?entity ?predicate  ?label."   +
+				              /*    "?entity rdf:type skos:Concept" + */
+				        " FILTER (regex ( ?label, "  + "\"" +   mention +  "\"," + "\"i\""  +" ) ) } LIMIT " + Integer.toString(5) ;  ;
+				
+				
+				// ask did not work
+				 Query query = QueryFactory.create(queryString) ;
+	           
+				 // http://sparql.bioontology.org/
+				 // "http://sparql.bioontology.org/sparql/"
+		         QueryEngineHTTP qexec = QueryExecutionFactory.createServiceRequest("http://sparql.hegroup.org/sparql/", query); 		                      
+		         ResultSet results1 ;
+		         qexec.setTimeout(60000);
+		         results1 = qexec.execSelect() ;
+		         for (; results1.hasNext();) 
+		         {
+
+		             QuerySolution soln = results1.nextSolution() ;
+			         String subj = soln.get("entity").toString();  //get the subject
+			         Linkuris.add(subj);
+		             System.out.println(subj) ;
+		         }
+		         return Linkuris ;
+
+			}
+			catch(QueryParseException e)
+			{
+				e.printStackTrace();
+			}
+			catch (Exception e)
+			{
+				
+				e.printStackTrace();
+			}
+			return null;
+			
+		}
 		
 	  public static List<String> BioResourceLookup(String mention,Integer limit)
 		{
@@ -199,6 +253,7 @@ public class QueryEngine {
 			return null;
 			
 		}
+	  
 	  
 	  public  List<String> lifedataResourceLookup(String entity,String predicate,Integer limit)
 		{
@@ -261,7 +316,7 @@ public class QueryEngine {
 					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"+
 			        "Select ?entity " +
 				    "{ " +
-			                   "?entity " + predicate +  " \"" +   entity +  "\". "   +
+			                   "?entity  ?predicate "  +  " \"" +   entity +  "\". "   +
 			        "   FILTER (!isBlank(?entity)) } " + "LIMIT " +  Integer.toString(limit) ; 
 
 			// now creating query object
@@ -293,7 +348,7 @@ public class QueryEngine {
 		
 		
 		
-		public  List<String> DBpResourceLookup(String entity,String predicate,Integer limit)
+		public static  List<String> DBpResourceLookup(String entity,String predicate,Integer limit)
 		{
 			List<String> Linkuris = new ArrayList<String>() ;
 			
@@ -307,8 +362,10 @@ public class QueryEngine {
 					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
 			        "select distinct  ?s " +
 				    "where { " +
-			                   "?s " + predicate +  " ?label." +
-			                   "?label <bif:contains> "   + "\"" +   entity +  "\"." + 
+			                   "?s  rdfs:label ?label." +
+			                   
+				              // "FILTER (regex(str(?label)," + "\"" +   entity +  "\"" + ",\"i\"))" +
+			                  "?label <bif:contains> "   + "\"" +   entity +  "\"." + 
 			            " } " +
 			            "LIMIT " +  Integer.toString(limit) ;
 
@@ -318,7 +375,52 @@ public class QueryEngine {
 				Query query = QueryFactory.create(queryString);
 				QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query);
 				ResultSet results ;
-				qexec.setTimeout(30000);
+				qexec.setTimeout(1800000);
+				results = qexec.execSelect(); 	
+				for (; results.hasNext();) 
+				{
+				    // Result processing is done here.
+			         QuerySolution soln = results.nextSolution() ;
+			         String subj = soln.get("s").toString();  //get the subject
+			         Linkuris.add(subj);
+			         System.out.println(subj) ;
+				}
+				return Linkuris ;
+			}
+			catch(Exception  e)
+			{
+				System.out.println(e.getMessage()) ;
+				DBpResourceLookupexact(entity,predicate,limit) ;
+			}
+			return null;
+			
+			
+		}
+		public static  List<String> DBpResourceLookupexact(String entity,String predicate,Integer limit)
+		{
+			List<String> Linkuris = new ArrayList<String>() ;
+			
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+			        "select distinct  ?s " +
+				    "where { " +
+			                   "?s  rdfs:label " + "\"" +   entity +  "\"@en" +
+			            " } " +
+			            "LIMIT " +  Integer.toString(limit) ;
+
+			// now creating query object
+			try
+			{
+				Query query = QueryFactory.create(queryString);
+				QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query);
+				ResultSet results ;
+				qexec.setTimeout(1800000);
 				results = qexec.execSelect(); 	
 				for (; results.hasNext();) 
 				{
@@ -392,6 +494,69 @@ public class QueryEngine {
 		}
 		
 		/*************************************** End Resources lookup Section******************************************************************/
+		public static ResultSet beerdfquery(String entity)
+		{
+			
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+			        "select distinct  ?p ?o ?label where {<" + entity +  "> ?p  ?o. "
+			        		+ "OPTIONAL {?o rdfs:label ?label }"
+			        		+ "} ";
+			
+			// now creating query object
+			try
+			{
+				Query query = QueryFactory.create(queryString);
+				QueryExecution qexec = QueryExecutionFactory.sparqlService("http://sparql.hegroup.org/sparql/", query);
+				ResultSet results ;
+				results = qexec.execSelect(); 	
+				return results ;
+			}
+			catch(QueryParseException e)
+			{
+			}
+			return null;
+		}
+		
+		public static ResultSet bioPortaluery(String entity)
+		{
+			
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+			        "select distinct  ?p ?o ?label where {<" + entity +  "> ?p  ?o. "
+			        		+ "OPTIONAL {?o rdfs:label ?label }"
+			        		+ "} ";
+			
+			// now creating query object
+			try
+			{
+				Query query = QueryFactory.create(queryString);
+				QueryEngineHTTP qexec = QueryExecutionFactory.createServiceRequest("http://sparql.bioontology.org/sparql/", query); 		                      
+		        qexec.addParam("apikey", "396993d0-4ce2-4123-93de-214e9b9ebcf2") ;
+		        qexec.setTimeout(30000);
+				ResultSet results ;
+				results = qexec.execSelect(); 	
+				return results ;
+			}
+			catch(QueryParseException e)
+			{
+			}
+			return null;
+			
+			
+		}
 		public static ResultSet bio2rdfquery(String entity)
 		{
 			
@@ -403,7 +568,9 @@ public class QueryEngine {
 					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
 					"PREFIX geo: <http://www.georss.org/georss/>"+
 					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
-			        "select distinct  ?p ?o where {<" + entity +  "> ?p  ?o. } ";
+			        "select distinct  ?p ?o ?label where {<" + entity +  "> ?p  ?o. "
+			        		+ "OPTIONAL {?o rdfs:label ?label }"
+			        		+ "} ";
 			
 			// now creating query object
 			try
@@ -441,6 +608,7 @@ public class QueryEngine {
 				Query query = QueryFactory.create(queryString);
 				QueryExecution qexec = QueryExecutionFactory.sparqlService("http://dbpedia.org/sparql", query);
 				ResultSet results ;
+				qexec.setTimeout(30000);
 				results = qexec.execSelect(); 	
 				return results ;
 			}
@@ -518,6 +686,56 @@ public class QueryEngine {
 				
 			}
 			return null;
+			
+		}
+		
+		public static ResultSet TriplePropertyaquery(String entity,String onto)
+		{
+			
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+			        "select distinct  ?p ?o where {<" + entity +  "> ?p  ?o. } ";
+			
+			// now creating query object
+			try
+			{
+				Query query = QueryFactory.create(queryString);
+
+				ResultSet results ;
+				
+				if (onto.contains("bioontology"))
+				{
+
+			        QueryEngineHTTP qexec = QueryExecutionFactory.createServiceRequest(onto, query); 
+					qexec.addParam("apikey", "396993d0-4ce2-4123-93de-214e9b9ebcf2") ;
+					qexec.setTimeout(30000);
+					results = qexec.execSelect(); 
+				}
+				else
+				{
+					QueryExecution qexec = QueryExecutionFactory.sparqlService(onto, query);
+					qexec.setTimeout(30000);
+					results = qexec.execSelect(); 
+				}
+				
+					
+				return results ;
+			}
+			catch(QueryParseException e)
+			{
+			}
+			catch (Exception e)
+			{
+				
+			}
+			return null;
+			
 			
 		}
 		
