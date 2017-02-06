@@ -25,7 +25,7 @@ public class LDConcepts {
 	{
 
 		Boolean booleanask = false ;
-		//if ( true && !(booleanask = EntityMentionDetectionLLD(mention)))
+		    if ( !(booleanask = EntityMentionDetectionLLD(mention)))
 			if (!(booleanask = EntityMentionDetectionBio(mention)))
 				booleanask = EntityMentionDetectionLOD(mention) ;
 		
@@ -47,11 +47,11 @@ public class LDConcepts {
 				"PREFIX geo: <http://www.georss.org/georss/>"+
 				"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
 				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"+
-		        "ASK " +
+		        "select ?entity where" +
 			    "{ " +
 		                   "?entity ?predicate" +  " \"" +   mention +  "\". "   +
 		                  "?entity rdf:type skos:Concept" + 
-		        " } "  ;
+		        " } LIMIT 1"  ;
 		
 
 		
@@ -60,10 +60,14 @@ public class LDConcepts {
 		{
 			Query query = QueryFactory.create(queryString);
 			QueryExecution qexec = QueryExecutionFactory.sparqlService("http://linkedlifedata.com/sparql", query);
-			Boolean results ;
+			ResultSet results ;
 			qexec.setTimeout(30000);
-			results = qexec.execAsk(); 
-			return results ;
+			results = qexec.execSelect(); 
+			for (; results.hasNext();) 
+			{
+				return true ;
+		         
+		    }
 		}
 		catch(QueryParseException e)
 		{

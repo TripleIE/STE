@@ -1,13 +1,19 @@
 package TE;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import TextProcess.removestopwords;
 import edu.cmu.lti.ws4j.demo.SimilarityCalculationDemo;
 import util.CosineSimilarity;
+import util.NGramAnalyzer;
+import util.ReadXMLFile;
+import util.predicateOntoDictionary;
 
 public class syntactic {
 	
@@ -179,5 +185,64 @@ public class syntactic {
 		return vector;
  	 }
 	 
+	 public static Map<String,List<String>> getPatternRelation(Map<String, Integer> concepts, String sentence)
+	 {
+		 
+		 List<String> uri = new ArrayList<String>() ;
+		 Map<String,List<String>> PreURI =  new HashMap <String, List<String>>() ;
+		 List<String> predicates  = predicateOntoDictionary.getPredicatDictionary() ;
+		 for (String concept1 : concepts.keySet()) 
+		 {
+			 for (String concept2 : concepts.keySet())
+			 {
+				 if (concept1.equals(concept2))
+					 continue ; 
+				 List<String> relations = new ArrayList<String>() ;
+				 Pattern p = Pattern.compile(Pattern.quote(concept1) + "(.*?)" + Pattern.quote(concept2)) ;
+				 Matcher m = p.matcher(sentence);
+				 while (m.find()) {
+				   System.out.println(m.group(1));
+				   relations.add(m.group(1)) ;
+				 }
+				 
+				 for (String rel:relations)
+				 {
+					Map<String, Integer> mentions = new HashMap<String, Integer>();
+					rel = rel.trim() ;
+					String tokens[] = rel.split(" ") ;
+					
+					mentions = NGramAnalyzer.entities(1,tokens.length, rel) ;
+					 for (String term: mentions.keySet())	
+					 {
+		                 if(term.trim().isEmpty())
+		                	 continue ; 
+						 for (String predicate : predicates)
+						 {
+							 String _tokens[] =  predicate.split("/");
+							 predicate = _tokens[_tokens.length -1] ;
+							 _tokens =  predicate.split("#");
+							 predicate = _tokens[0] ;
+
+							 
+							if ( predicate.contains(term))
+							{
+								uri.add(concept1 + "," + predicate + "," + concept2) ;
+							}
+							 
+						 }
+						 PreURI.put(term,uri) ;
+					 }
+					 
+				 }
+			 }
+		 }
+			try {
+				ReadXMLFile.Serialized(PreURI, "F:\\eclipse64\\eclipse\\pattern");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	    return PreURI ; 
+	 }
 
 }

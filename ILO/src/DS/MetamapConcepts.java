@@ -202,9 +202,7 @@ public class MetamapConcepts {
 		    	              System.out.println("   Sources: " + mapEv.getSources());
 		    	              System.out.println("   Positional Info: " + mapEv.getPositionalInfo());
 		    	              System.out.println("   Negation Info: " + mapEv.getNegationStatus());
-		    	              
-		    	              
-		    	              boolean b = true;
+
 		    	              /*List<String> parse = mapEv.getSources();
 		    	              if(parse.size() < 2)
 		    	              {

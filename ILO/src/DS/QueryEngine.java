@@ -655,6 +655,52 @@ public class QueryEngine {
 			
 		}		
 
+		public static List<String> lifedataqueryuris(String resource)
+		{
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+				        "select distinct  ?o ?label where {<" + resource +  "> ?p  ?o." + 
+				        "OPTIONAL {?o rdfs:label ?label} "
+				        		+ " } " +
+			             "LIMIT 100"  ;
+			
+			// now creating query object
+			try
+			{
+				
+				List<String> Linkuris = new ArrayList<String>() ;
+				Query query = QueryFactory.create(queryString);
+				QueryExecution qexec = QueryExecutionFactory.sparqlService("http://linkedlifedata.com/sparql", query);
+				ResultSet results ;
+				results = qexec.execSelect(); 	
+				for (; results.hasNext();) 
+				{
+				    // Result processing is done here.
+			         QuerySolution soln = results.nextSolution() ;
+			         String subj = soln.get("o").toString();  //get the subject
+			         Linkuris.add(subj);
+			         System.out.println(subj) ;
+				}
+				
+				return Linkuris ;
+			}
+			catch(QueryParseException e)
+			{
+			}
+			catch (Exception e)
+			{
+				
+			}
+			return null;
+			
+		}		
+
 		public static ResultSet LODquery(String entity)
 		{
 			String queryString=
@@ -738,6 +784,57 @@ public class QueryEngine {
 			
 			
 		}
+		public static ResultSet TripleDescriptive(String entity,String onto)
+		{
+			
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+					"PREFIX dbpedia-owl: <http://dbpedia.org/ontology/>" +
+			        "select distinct  ?def where {<" + entity +  "> rdfs:comment|skos:note|skos:definition|dbpedia-owl:abstract   ?def. } ";
+			
+			// now creating query object
+			try
+			{
+				Query query = QueryFactory.create(queryString);
+
+				ResultSet results ;
+				
+				if (onto.contains("bioontology"))
+				{
+
+			        QueryEngineHTTP qexec = QueryExecutionFactory.createServiceRequest(onto, query); 
+					qexec.addParam("apikey", "396993d0-4ce2-4123-93de-214e9b9ebcf2") ;
+					qexec.setTimeout(30000);
+					results = qexec.execSelect(); 
+				}
+				else
+				{
+					QueryExecution qexec = QueryExecutionFactory.sparqlService(onto, query);
+					qexec.setTimeout(30000);
+					results = qexec.execSelect(); 
+				}
+				
+					
+				return results ;
+			}
+			catch(QueryParseException e)
+			{
+				System.out.println(e.getMessage()) ;
+			}
+			catch (Exception e)
+			{
+				System.out.println(e.getMessage()) ;
+			}
+			return null;
+			
+			
+		}
 		
 		
 		public static ResultSet LODqueryDefinition(String entity, String predicate)
@@ -781,7 +878,7 @@ public class QueryEngine {
 			
 		}
 		
-		public static ResultSet LLDqueryDefinition(String entity, String predicate)
+		public static ResultSet LLDqueryDefinition(String entity)
 		{
 	
 			String queryString=
@@ -792,10 +889,10 @@ public class QueryEngine {
 					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
 					"PREFIX geo: <http://www.georss.org/georss/>"+
 					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
-			        "select distinct  ?o " +
+			        "select distinct  ?def " +
 				    "where { " +
-			                   "?s " + predicate + "\"" +   entity +  "\"." + 
-			                   "?s skos:note|skos:definition ?o." + 
+			                   "?s " + "rdfs:label|skos:prefLabel|skos:altLabel" + "\"" +   entity +  "\"." + 
+			                   "?s skos:note|skos:definition ?def." + 
 			            " } " +
 			            "LIMIT 50" ;
 			

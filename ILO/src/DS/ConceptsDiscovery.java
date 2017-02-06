@@ -38,12 +38,13 @@ public class ConceptsDiscovery {
             getconcepts("Famotidine-associated delirium. A series of six cases.".toLowerCase()) ; */
             
 		Map<String, List<String>> titles =  ReadXMLFile.ReadCDR_TestSet_BioC()  ; 
-		Map<String, List<String>> result  = getcachconcepts(titles);
-		ReadXMLFile.Serialized(result, "F:\\eclipse64\\eclipse\\conceptDictionary");
+		getmeasureMetMapconcepts(titles) ;
+		HashMap<String, Map<String, List<String>>> result  = getcachconcepts(titles);
+		ReadXMLFile.Serialized(result, "F:\\eclipse64\\eclipse\\conceptDictionarylldwithtitle");
 		System.out.println(result);                      
             
 	}
-	public static Map<String, List<String>> getcachconcepts(Map<String, List<String>> titles) throws IOException
+	public static HashMap<String, Map<String, List<String>>> getcachconcepts(Map<String, List<String>> titles) throws IOException
 	{
 		
 		double avgRecall = 0  ; 
@@ -62,12 +63,12 @@ public class ConceptsDiscovery {
 	    }
 	    
 		int counter = 0 ;
-		Map<String, Integer> allconcepts = new HashMap<String, Integer>();
+		HashMap<String, Map<String, List<String>>> diectwithtitle = new HashMap<String, Map<String, List<String>>>();
 		for(String title : titles.keySet())
 		{
-			
+			String orgTitle = title ;
+			Map<String, Integer> allconcepts = new HashMap<String, Integer>();
 			counter++ ; 
-			  
 			try {
 				
 				// find all concepts that exist in the UMLS
@@ -128,35 +129,55 @@ public class ConceptsDiscovery {
 				allconcepts.putAll(lodconcepts);
 				
 
+				// get the surface form & synonym of each concepts 
+				   Map<String, List<String>> diect = new HashMap<String, List<String>>();
+
+				   for (String concept:allconcepts.keySet())
+				   {
+					   Map<String, Integer> surfaceFormmesh = null ;
+					   Map<String, Integer> surfaceFormlld = null ;
+					   surfaceFormlld  = surfaceFormDiscovery.getsurfaceFormLLD(concept); // getsurfaceFormMesh(concept); 
+					   surfaceFormmesh  = surfaceFormDiscovery.getsurfaceFormMesh(concept);
+					   List<String> forms = new ArrayList<String>();
+					   Map<String, Integer> diectform = new HashMap<String, Integer>();
+					   if (surfaceFormmesh != null)
+					   {
+						   
+						   for(String term : surfaceFormmesh.keySet()) 
+						   {
+							   String[] tokens  = term.split("@") ;
+							   term = tokens[0] ; 
+							   if (diectform.put(term, 1)  ==  null) 
+								   forms.add(term) ;
+						   }
+						   
+						   for(String term : surfaceFormlld.keySet()) 
+						   {
+							   String[] tokens  = term.split("@") ;
+							   term = tokens[0] ; 
+							   if (diectform.put(term, 1)  ==  null) 
+								   forms.add(term) ;
+						   }
+					   }
+					   diect.put(concept, forms) ;
+				   }
+				   
+				   diectwithtitle.put(orgTitle, diect) ;
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
+			
+			
+			
+			
 		}
 		
-		// get the surface form & synonym of each concepts 
-		   Map<String, List<String>> diect = new HashMap<String, List<String>>();
-		   for (String concept:allconcepts.keySet())
-		   {
-			   Map<String, Integer> surfaceForm = null ;
-			   surfaceForm  = surfaceFormDiscovery.getsurfaceFormMesh(concept); 
-			   List<String> forms = new ArrayList<String>();
-			   if (surfaceForm != null)
-			   {
-				   
-				   for(String term : surfaceForm.keySet()) 
-				   {
-					   String[] tokens  = term.split("@") ;
-					   term = tokens[0] ; 
-					   forms.add(term) ;
-				   }
-			   }
-			   diect.put(concept, forms) ;
-		   }
+		
 	
-		return diect ;
+		return diectwithtitle ;
 	}
 	
 	public static Map<String, Integer> getconcepts(Map<String, List<String>> titles)
@@ -202,7 +223,7 @@ public class ConceptsDiscovery {
 					i++ ; 
 				}
 				
-				
+								
 			// sort them Descending  
 				arr = insertionSort(arr); 
 				// pruning the concepts 
@@ -226,22 +247,7 @@ public class ConceptsDiscovery {
 				}
 
 				allconcepts.putAll(metmapconcepts);
-				
-/*				Map<String, Integer> nerdconcepts = nerd.getNerdEntities(title) ;
-				String[] arrnerd = new String[nerdconcepts.size()] ;
-				i = 0 ; 
-				for( String concept : nerdconcepts.keySet())
-				{
-					arrnerd[i] = concept ;
-					i++ ; 
-				}
-				
-				arrnerd = insertionSort(arrnerd); 
-				for( String concept : arrnerd)
-				{
-					title = title.replace(concept.toLowerCase(), "") ;
-				}  */
-				
+
 				
 				Map<String, Integer> lodconcepts = new HashMap<String, Integer>();
 				Map<String, Integer> mentions = new HashMap<String, Integer>();
@@ -392,6 +398,7 @@ public class ConceptsDiscovery {
 		double avgPrecision = 0.0 ;
 		double avgFmeasure = 0.0 ; 
 		int counter = 0 ;
+		Map<String, List<String>> notfoundconcepts = new HashMap<String, List<String>>(); 
 		for(String title : titles.keySet())
 		{
 			counter++ ;
@@ -400,6 +407,7 @@ public class ConceptsDiscovery {
 				break ; 
 			}
 			List<String> GoldSndconcepts = titles.get(title); 
+			List<String> notfoundGoldSndconcepts = titles.get(title); 
 			
 			try {
 				
@@ -419,6 +427,7 @@ public class ConceptsDiscovery {
                    if (GoldSndconcepts.contains(concept.toLowerCase()))
                    {
                 	   relevent++ ; 
+                	   notfoundGoldSndconcepts.remove(concept.toLowerCase()) ;
                    }
 					
 				}
@@ -445,12 +454,19 @@ public class ConceptsDiscovery {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			notfoundconcepts.put(title, notfoundGoldSndconcepts) ;
 		}
 		avgRecall = avgRecall / titles.size() ;
 		avgPrecision = avgPrecision / titles.size() ;
 		avgFmeasure = avgFmeasure / titles.size() ;
 		
 		String result = Double.toString(avgRecall) + " " +  Double.toString(avgPrecision) +" " +  Double.toString(avgFmeasure) ;
+		try {
+			ReadXMLFile.Serialized(notfoundconcepts, "F:\\eclipse64\\eclipse\\conceptDictionarylldwithtitlenotfound");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return result ;
 	}
 	

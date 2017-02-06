@@ -173,6 +173,27 @@ public class ReadXMLFile {
 			      return dictionary;
 		   }
 	  
+			public static  void Serializeddir(List<String> dictionary,String fileout) throws IOException
+			 {
+
+			     try
+			     {
+			    	 // Create output stream.
+			         FileOutputStream fileOut =
+			         new FileOutputStream(fileout);
+				     // Create XML encoder.
+				     XMLEncoder xenc = new XMLEncoder(fileOut);
+			
+				     // Write object.
+				     xenc.writeObject(dictionary);
+				     xenc.close();
+			         fileOut.close();
+			         System.out.printf("Serialized data is saved in" + fileout);
+			     }catch(IOException i)
+			     {
+			          i.printStackTrace();
+			     }
+			 }  
 		public static  void Serializeddir(Map<String, Integer> dictionary,String fileout) throws IOException
 		 {
 
@@ -194,6 +215,23 @@ public class ReadXMLFile {
 		          i.printStackTrace();
 		     }
 		 }  
+		 public static  List<String> Deserializedirlis(String fileout)
+		   {
+			 	   List<String> dictionary ;
+				   FileInputStream fileIn;
+				try {
+					fileIn = new FileInputStream(fileout);
+				
+				   XMLDecoder decoder =  new XMLDecoder(fileIn);
+				   dictionary  = (List<String>)decoder.readObject();
+				   decoder.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				}
+			      return dictionary;
+		   }
 		 public static  Map<String, Integer> Deserializedir(String fileout)
 		   {
 			       Map<String, Integer> dictionary ;
@@ -233,6 +271,27 @@ public class ReadXMLFile {
 	     }
 	 }
 	
+	public static  void Serialized(HashMap<String, Map<String, List<String>>> dictionary,String fileout) throws IOException
+	 {
+
+	     try
+	     {
+	    	 // Create output stream.
+	         FileOutputStream fileOut =
+	         new FileOutputStream(fileout);
+		     // Create XML encoder.
+		     XMLEncoder xenc = new XMLEncoder(fileOut);
+	
+		     // Write object.
+		     xenc.writeObject(dictionary);
+		     xenc.close();
+	         fileOut.close();
+	         System.out.printf("Serialized data is saved in" + fileout);
+	     }catch(IOException i)
+	     {
+	          i.printStackTrace();
+	     }
+	 }
 	
 	 public static  Map<String, List<String>> Deserialize(String fileout)
 	   {

@@ -177,7 +177,7 @@ public class surfaceFormDiscovery {
 		
 	}
 	
-	public static String getdefFormMesh(String resource) throws IOException
+	public static String getdefFromMesh(String resource) throws IOException
 	{
 		Map<String, Integer> surfaceForm = new HashMap<String, Integer>() ; 
 
@@ -192,10 +192,12 @@ public class surfaceFormDiscovery {
 				"PREFIX mesh2015: <http://id.nlm.nih.gov/mesh/2015/>" + 
 				"PREFIX mesh2016: <http://id.nlm.nih.gov/mesh/2016/>" + 
 				"PREFIX mesh2017: <http://id.nlm.nih.gov/mesh/2017/>" + 
-				"select distinct ?def where { " +
-				 resource + " meshv:scopeNote ?def. } " ; 
+				"select distinct ?def where {  ?d a meshv:Descriptor ." +
+				 " ?d meshv:concept ?c . " + 
+				 " ?c rdfs:label ?cName. " + 
+				 " ?c meshv:scopeNote ?def. " +
 		
-				// "FILTER(REGEX(?dName," + "'" + concept.trim() + "'" + ",'i' )" + ")}" /* + "  || REGEX(?cName," + concept  + ",'i')) }"*/ ;
+				"FILTER(REGEX(?cName," + "'" + resource.trim() + "'" + ",'i' )" + ")}" ;  /* + "  || REGEX(?cName," + concept  + ",'i')) }"*/ ;
 		
 		// now creating query object
 		try
