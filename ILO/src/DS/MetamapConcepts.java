@@ -235,7 +235,7 @@ public class MetamapConcepts {
 		    for(int i = 0; i< conceptsIdentified.size(); i++)
 	        {
 	      	  System.out.println(conceptsIdentified.get(i));
-	      	  concepttypes.put(conceptsIdentified.get(i).toLowerCase(), 0) ;
+	      	  concepttypes.put(conceptsIdentified.get(i).toLowerCase(), 1) ;
 	        }
 		    
 		    return concepttypes ;

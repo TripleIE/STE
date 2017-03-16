@@ -40,12 +40,12 @@ public class CosineSimilarity {
      * @param rightVector right vector
      * @return cosine similarity between the two vectors
      */
-    public Double cosineSimilarity(Map<CharSequence, Integer> leftVector, Map<CharSequence, Integer> rightVector) {
+    public static Double cosineSimilarity(Map<String, Integer> leftVector, Map<String, Integer> rightVector) {
         if (leftVector == null || rightVector == null) {
             throw new IllegalArgumentException("Vectors must not be null");
         }
 
-        Set<CharSequence> intersection = getIntersection(leftVector, rightVector);
+        Set<String> intersection = getIntersection(leftVector, rightVector);
 
         double dotProduct = dot(leftVector, rightVector, intersection);
         double d1 = 0.0d;
@@ -72,9 +72,9 @@ public class CosineSimilarity {
      * @param rightVector right vector map
      * @return common strings
      */
-    private Set<CharSequence> getIntersection(Map<CharSequence, Integer> leftVector,
-            Map<CharSequence, Integer> rightVector) {
-        Set<CharSequence> intersection = new HashSet<CharSequence>(leftVector.keySet());
+    private static  Set<String> getIntersection(Map<String, Integer> leftVector,
+            Map<String, Integer> rightVector) {
+        Set<String> intersection = new HashSet<String>(leftVector.keySet());
         intersection.retainAll(rightVector.keySet());
         return intersection;
     }
@@ -89,10 +89,10 @@ public class CosineSimilarity {
      * @param intersection common elements
      * @return the dot product
      */
-    private double dot(Map<CharSequence, Integer> leftVector, Map<CharSequence, Integer> rightVector,
-            Set<CharSequence> intersection) {
+    private static double dot(Map<String, Integer> leftVector, Map<String, Integer> rightVector,
+            Set<String> intersection) {
         long dotProduct = 0;
-        for (CharSequence key : intersection) {
+        for (String key : intersection) {
             dotProduct += leftVector.get(key) * rightVector.get(key);
         }
         return dotProduct;

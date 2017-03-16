@@ -235,7 +235,7 @@ public class semantic {
 		for (String concept : triples.keySet())
 		{
 			List<String> statement = new ArrayList<String>() ;
-			String sent = Sentence.replaceFirst(concept, "");
+			String sent = Sentence ; //Sentence.replaceFirst(concept, "");
 			List<String> _triples = triples.get(concept) ;
 			 for (String triple: _triples)
 			 {
@@ -268,9 +268,9 @@ public class semantic {
                  if(Object.isEmpty())
                 	 continue ; 
                  
-				 Map<CharSequence, Integer>  vectormain = getVector(sent,Object) ;
-				 Map<CharSequence, Integer>  vectorobj = getVector(Object,vectormain) ;
-				 Map<CharSequence, Integer>  vectorsent = getVector(sent,vectormain) ;
+				 Map<String, Integer>  vectormain = getVector(sent,Object) ;
+				 Map<String, Integer>  vectorobj = getVector(Object,vectormain) ;
+				 Map<String, Integer>  vectorsent = getVector(sent,vectormain) ;
 				 
 				 if (sim.cosineSimilarity(vectorobj, vectorsent) > 0.30)
 				 {
@@ -290,9 +290,9 @@ public class semantic {
 		}
 		return null; 
 	}
-	public static Map<CharSequence, Integer>  getVector(String text1, String text2)
+	public static Map<String, Integer>  getVector(String text1, String text2)
 	 {
-		Map<CharSequence, Integer>  vector = new HashMap<CharSequence, Integer>();
+		Map<String, Integer>  vector = new HashMap<String, Integer>();
 		
 		String tokens[] = text1.split(" ") ;
    	for (String token : tokens) 
@@ -309,9 +309,9 @@ public class semantic {
 		return vector;
 	 }
 	 
-	 public static Map<CharSequence, Integer>  getVector(String text1, Map<CharSequence, Integer> vectorin)
+	 public static Map<String, Integer>  getVector(String text1, Map<String, Integer> vectorin)
 	 {
-		Map<CharSequence, Integer>  vector = new HashMap<CharSequence, Integer>();
+		Map<String, Integer>  vector = new HashMap<String, Integer>();
 		vector.putAll(vectorin);
 		String tokens[] = text1.split(" ") ;
    	for (String token : tokens) 
@@ -321,4 +321,38 @@ public class semantic {
 		return vector;
 	 }
 
+	 public static Map<String, Integer>  getbagofwords( Map<String, List<String>> Docs)
+	 {
+		 
+		Map<String, Integer>  vector = new HashMap<String, Integer>();
+		 removestopwords rem = new removestopwords();
+		for (String text : Docs.keySet())
+		{
+			text =  rem.removestopwordfromsen(text) ;
+			String tokens[] = text.split(" ") ;
+			
+		   	for (String token : tokens) 
+		   	{
+		   		vector.put(token,1);
+		   	} 
+		}    
+		return vector;
+	 }
+	 public static Map<String, Integer>  getbagofwords( String text)
+	 {
+		 
+		Map<String, Integer>  vector = new HashMap<String, Integer>();
+		 removestopwords rem = new removestopwords();
+
+		{
+			text =  rem.removestopwordfromsen(text) ;
+			String tokens[] = text.split(" ") ;
+			
+		   	for (String token : tokens) 
+		   	{
+		   		vector.put(token,1);
+		   	} 
+		}    
+		return vector;
+	 }
 }

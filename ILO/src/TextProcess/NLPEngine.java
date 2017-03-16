@@ -29,6 +29,7 @@ public class NLPEngine {
     // segmentation function 
 	// return list of 
     // using Stanford APIs 
+	public static StanfordCoreNLP pipeline ;
 	public List<String> getSentences(String text)
 	{
 		
@@ -100,9 +101,58 @@ public class NLPEngine {
 	}
 	
 	
+	public static StanfordCoreNLP  getStanfordCoreNLP()
+	{
+		
+		if (pipeline == null)
+		{
+		// creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution 
+	    Properties props = new Properties();
+	     props.put("pos.model", "E:\\Ptriple\\Vendor\\parser\\english-left3words-distsim.tagger");
+	  //  props.put("pos.model", "C:\\Users\\mazina\\Desktop\\School\\Khalid\\Paper\\Everything2III\\english-left3words-distsim.tagger");
+	    props.put("ner.model", "E:\\Ptriple\\Vendor\\parser\\english.all.3class.caseless.distsim.crf.ser.gz");
+	    props.put("parse.model", "E:\\Ptriple\\Vendor\\parser\\englishPCFG.caseless.ser.gz");
+	    props.setProperty("annotators", "tokenize, ssplit, pos, lemma, parse");
+	   
+	    	pipeline = new StanfordCoreNLP(props);
+		}
+	    
+	    return pipeline ;
+
+    
+	}
+	
+	public static Tree  gettree(StanfordCoreNLP pipeline,String sentance)
+	{
+	    
+	    // create an empty Annotation just with the given text
+	    Annotation document = new Annotation(sentance);
+	    
+	    // run all Annotators on this text
+	    pipeline.annotate(document);
+	    
+	    // these are all the sentences in this document
+	    // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
+
+	 // these are all the sentences in this document
+	    // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
+	    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+	    Tree tree = null ; 
+
+		    for(CoreMap sentence: sentences)
+		    {
+		      tree = sentence.get(TreeAnnotation.class);
+		      break ;
+		    }
+		return tree;
+
+    
+	}
+	
+	
 	// returns all nouns in tree
 	
-	public void  getNoun(Tree t, List<String> nouns) {
+	public static void  getNoun(Tree t, List<String> nouns) {
          
 	    // NN Noun, singular or mass 
 	    // NNS Noun, plural 
@@ -118,7 +168,7 @@ public class NLPEngine {
 	}
 	
 	// return all verbs in tree
-	public void  getVerbs(Tree t, List<String> verbs) {
+	public static void  getVerbs(Tree t, List<String> verbs) {
         
 
 		removestopwords stopwords = new removestopwords() ;

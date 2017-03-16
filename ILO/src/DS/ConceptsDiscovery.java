@@ -37,20 +37,6 @@ public class ConceptsDiscovery {
 		//"Runny nose is the Symptom of common cold"
             getconcepts("Famotidine-associated delirium. A series of six cases.".toLowerCase()) ; */
             
-		Map<String, List<String>> titles =  ReadXMLFile.ReadCDR_TestSet_BioC()  ; 
-		getmeasureMetMapconcepts(titles) ;
-		HashMap<String, Map<String, List<String>>> result  = getcachconcepts(titles);
-		ReadXMLFile.Serialized(result, "F:\\eclipse64\\eclipse\\conceptDictionarylldwithtitle");
-		System.out.println(result);                      
-            
-	}
-	public static HashMap<String, Map<String, List<String>>> getcachconcepts(Map<String, List<String>> titles) throws IOException
-	{
-		
-		double avgRecall = 0  ; 
-		double avgPrecision = 0 ;
-		double avgFmeasure = 0 ; 
-		
 		MetaMapApi api = new MetaMapApiImpl();
 		List<String> theOptions = new ArrayList<String>();
 	    theOptions.add("-y");  // turn on Word Sense Disambiguation
@@ -61,7 +47,21 @@ public class ConceptsDiscovery {
 	    if (theOptions.size() > 0) {
 	      api.setOptions(theOptions);
 	    }
-	    
+		
+		Map<String, List<String>> titles =  ReadXMLFile.ReadCDR_TestSet_BioC()  ; 
+		getmeasureMetMapconcepts(titles) ;
+		HashMap<String, Map<String, List<String>>> result  = getcachconcepts(titles,api);
+		ReadXMLFile.Serialized(result, "F:\\eclipse64\\eclipse\\conceptDictionarylldwithtitle");
+		System.out.println(result);                      
+            
+	}
+	public static HashMap<String, Map<String, List<String>>> getcachconcepts(Map<String, List<String>> titles, MetaMapApi api ) throws IOException
+	{
+		
+		double avgRecall = 0  ; 
+		double avgPrecision = 0 ;
+		double avgFmeasure = 0 ; 
+			    
 		int counter = 0 ;
 		HashMap<String, Map<String, List<String>>> diectwithtitle = new HashMap<String, Map<String, List<String>>>();
 		for(String title : titles.keySet())
@@ -180,23 +180,123 @@ public class ConceptsDiscovery {
 		return diectwithtitle ;
 	}
 	
-	public static Map<String, Integer> getconcepts(Map<String, List<String>> titles)
+	public static HashMap<String, Map<String, List<String>>> getcachconcepts(List<String> titles, MetaMapApi api) throws IOException
 	{
 		
 		double avgRecall = 0  ; 
 		double avgPrecision = 0 ;
 		double avgFmeasure = 0 ; 
+		int counter = 0 ;
+		HashMap<String, Map<String, List<String>>> diectwithtitle = new HashMap<String, Map<String, List<String>>>();
+		for(String title : titles)
+		{
+			String orgTitle = title ;
+			Map<String, Integer> allconcepts = new HashMap<String, Integer>();
+			counter++ ; 
+			try {
+				if (!title.contains("@en"))
+					continue ; 
+				 System.out.println(title);
+				 
+				// find all concepts that exist in the UMLS
+				Map<String, Integer> metmapconcepts = MetamapConcepts.getconcepts(title,api) ;
+				String[] arr = new String[metmapconcepts.size()] ;
+				int i= 0 ; 
+				for( String concept : metmapconcepts.keySet())
+				{
+					arr[i] = concept ;
+					i++ ; 
+				}
+				
+				
+			// sort them Descending  
+				arr = insertionSort(arr); 
+				// pruning the concepts 
+				for( String concept : arr)
+				{
+					if ( title.contains(concept.toLowerCase()) )
+					{
+						title = title.replace(concept.toLowerCase(), "") ;
+					}
+					else
+					{
+						metmapconcepts.remove(concept) ;
+					}
+				}
+				
+				allconcepts.putAll(metmapconcepts);
+				
+/*				Map<String, Integer> nerdconcepts = nerd.getNerdEntities(title) ;
+				String[] arrnerd = new String[nerdconcepts.size()] ;
+				i = 0 ; 
+				for( String concept : nerdconcepts.keySet())
+				{
+					arrnerd[i] = concept ;
+					i++ ; 
+				}
+				
+				arrnerd = insertionSort(arrnerd); 
+				for( String concept : arrnerd)
+				{
+					title = title.replace(concept.toLowerCase(), "") ;
+				}  */
+				
+				
+/*				Map<String, Integer> lodconcepts = new HashMap<String, Integer>();
+				Map<String, Integer> mentions = new HashMap<String, Integer>();
+				
+				mentions = NGramAnalyzer.entities(1,3, title) ;
+				
+				for(String mention : mentions.keySet())
+				{
+					// no need to examine the stopwords
+					if (!mention.isEmpty() && !removestopwords.removestopwordsingle(mention.trim()) && LDConcepts.EntityMentionDetection(mention) ) 
+						lodconcepts.put(mention, 1) ;
+				}				
+				allconcepts.putAll(lodconcepts);*/
+				
+
+				// get the surface form & synonym of each concepts 
+				   Map<String, List<String>> diect = new HashMap<String, List<String>>();
+
+				   for (String concept:allconcepts.keySet())
+				   {
+					   Map<String, Integer> surfaceFormmesh = null ;
+					   Map<String, Integer> surfaceFormlld = null ;
+					  // surfaceFormlld  = surfaceFormDiscovery.getsurfaceFormLLD(concept); // getsurfaceFormMesh(concept); 
+					  // surfaceFormmesh  = surfaceFormDiscovery.getsurfaceFormMesh(concept);
+					   List<String> forms = new ArrayList<String>();
+					   forms.add(concept) ;
+					   diect.put(concept, forms) ;
+				   }
+				   
+				   diectwithtitle.put(orgTitle, diect) ;
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			
+			
+			
+		}
 		
-		MetaMapApi api = new MetaMapApiImpl();
-		List<String> theOptions = new ArrayList<String>();
-	    theOptions.add("-y");  // turn on Word Sense Disambiguation
-	    theOptions.add("-u");  //  unique abrevation 
-	    theOptions.add("--negex");  
-	    theOptions.add("-v");
-	    theOptions.add("-c");   // use relaxed model that  containing internal syntactic structure, such as conjunction.
-	    if (theOptions.size() > 0) {
-	      api.setOptions(theOptions);
-	    }
+		
+	
+		return diectwithtitle ;
+	}
+	
+	
+	
+	public static Map<String, Integer> getconcepts(Map<String, List<String>> titles,MetaMapApi api)
+	{
+		
+		double avgRecall = 0  ; 
+		double avgPrecision = 0 ;
+		double avgFmeasure = 0 ; 
+
 	    
 		int counter = 0 ;
 		Map<String, Integer> allconcepts = new HashMap<String, Integer>();

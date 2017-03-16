@@ -23,11 +23,13 @@ public class LDConcepts {
 	
 	public static Boolean EntityMentionDetection(String mention)
 	{
-
 		Boolean booleanask = false ;
-		    if ( !(booleanask = EntityMentionDetectionLLD(mention)))
-			if (!(booleanask = EntityMentionDetectionBio(mention)))
+		if (mention.length() > 2)
+		{
+		    if ( true || !(booleanask = EntityMentionDetectionLLD(mention)))
+		    	if (!(booleanask = EntityMentionDetectionBio(mention)))
 				booleanask = EntityMentionDetectionLOD(mention) ;
+		}
 		
 		return booleanask;
 		

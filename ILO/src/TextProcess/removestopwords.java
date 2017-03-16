@@ -27,7 +27,7 @@ public class removestopwords {
 	
 
 
-	public    ArrayList<String> removestopword(String s)
+	public static    ArrayList<String> removestopword(String s)
 	{
 		 ArrayList<String> wordsList = new ArrayList<String>();
 		s.replaceAll(",", "");
@@ -77,7 +77,7 @@ public class removestopwords {
     	return wordsList ;	
 	}
 	
-	public String removestopwordfromsen(String s)
+	public static  String removestopwordfromsen(String s)
 	{
             String sen = "" ;
     		for (String str : removestopword(s))

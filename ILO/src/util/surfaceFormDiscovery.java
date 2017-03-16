@@ -123,6 +123,8 @@ public class surfaceFormDiscovery {
 		// now creating query object
 		try
 		{
+			
+			//Any MeSH term ('D' or 'M') that has entity  as part of its name. (inference required)
 			Query query = QueryFactory.create(queryString);
 			QueryExecution qexec = QueryExecutionFactory.sparqlService("http://id.nlm.nih.gov/mesh/sparql?inference=true", query);
 			//QueryExecution qexec = QueryExecutionFactory.sparqlService("http://lod.openlinksw.com/sparql", query);
@@ -137,13 +139,13 @@ public class surfaceFormDiscovery {
 		         
 		    }
 			
-			MetaMapApi api = new MetaMapApiImpl();
+/*			MetaMapApi api = new MetaMapApiImpl();
 			List<String> conceptsIdentified = MetamapConcepts.getconceptsforms(concept, api);
 			for (String altconcept:conceptsIdentified)
 			{
 				conceptslist.add(altconcept);
 				surfaceForm.put(altconcept,1);
-			}
+			}*/
 			
 			for (String cpt :conceptslist)
 			{

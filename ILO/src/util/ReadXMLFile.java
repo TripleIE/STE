@@ -25,9 +25,135 @@ import java.util.Map;
 
 public class ReadXMLFile {
     public static void main(String[] args) {
-    	ReadCDR_TestSet_BioC() ;
+    	ReadPMC("F:\\TempDB\\PMCxxxx\\PMC0029XXXXX\\PMC2900151.xml") ;
     }
 
+    
+  
+    
+    public static String ReadPMC(String filename) {
+
+        try {
+
+    	File fXmlFile = new File(filename);
+    	DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    	Document doc = dBuilder.parse(fXmlFile);
+
+    	//optional, but recommended
+    	//read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+    	doc.getDocumentElement().normalize();
+
+    	System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+        String text =  doc.getElementsByTagName("article-title").item(0).getTextContent() ; 
+    	text = text.replaceAll("\n", " ") ;
+    	System.out.println("----------------------------");
+    	 return text ;
+    	 
+        } catch (Exception e) {
+    	e.printStackTrace();
+    	 return null ; 
+        }
+        
+      }
+
+    
+    
+    public static void ReadLLD(String filename) {
+
+        try {
+
+    	File fXmlFile = new File(filename);
+    	DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    	Document doc = dBuilder.parse(fXmlFile);
+
+    	doc.getDocumentElement().normalize();
+    	Map<String, Map<String,String>> list = new HashMap<String, Map<String,String>>();
+    	System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+        NodeList resultnodes =  doc.getElementsByTagName("result") ; 
+        for (int i = 0; i < resultnodes.getLength()  ; i++)  
+        {
+        	System.out.println( resultnodes.item(i).getNodeName()); 
+        	Node nNode = resultnodes.item(i) ;
+        	if (nNode.getNodeType() == Node.ELEMENT_NODE)
+        	{
+        		 Element eElement = (Element) nNode;
+        		 NodeList Bnodes =  eElement.getElementsByTagName("binding") ;
+     			 String Concept1 = null ; 
+    			 String Concept2 = null ; 
+    			 String labelconcept1  = null;
+    			 String labelconcept2 = null; 
+        		 for (int ii = 0; ii < Bnodes.getLength()  ; ii++)
+        		 {
+   
+        			 
+        			 Node nBNode = Bnodes.item(ii) ; // binding
+        			 Element eBElement = (Element) nBNode;
+        			 String Label = eBElement.getAttribute("name"); 
+        			 
+        			 if(Label.equals("concept1"))
+        			 {
+        				 Concept1 =  eBElement.getTextContent().trim(); 
+        			 }
+        			 
+        			 if(Label.equals("concept2"))
+        			 {
+        				 Concept2 =  eBElement.getTextContent().trim(); 
+        			 }
+        			 
+           			 if(Label.equals("labelconcept1"))
+        			 {
+           				labelconcept1 =  eBElement.getTextContent().trim(); 
+        			 }
+           			 
+           			 if(Label.equals("labelconcept2"))
+        			 {
+           				labelconcept2 =  eBElement.getTextContent().trim(); 
+        			 }	 
+        		 }
+    			 
+        		 Map<String,String> nlist = list.get(labelconcept1) ;
+    			 if (nlist == null )
+    			 {
+    				  nlist = new HashMap<String,String>();  
+    				  nlist.put(labelconcept2,Concept2) ; 
+    				  nlist.put(labelconcept1,Concept1) ;
+    				  list.put(labelconcept1, nlist) ;
+    			 }
+    			 else
+    			 {
+    				 nlist.put(labelconcept2,Concept2) ;
+    				 list.put(labelconcept1, nlist) ;
+    			 }
+    			 
+    			 Map<String,String> nnlist = list.get(labelconcept2) ;
+    			 if (nnlist == null )
+    			 {
+    				  nnlist = new HashMap<String,String>();  
+    				  nnlist.put(labelconcept1,Concept1) ;
+    				  nlist.put(labelconcept2,Concept2) ;
+    				  list.put(labelconcept2, nlist) ;
+    			 }
+    			 else
+    			 {
+    				 nnlist.put(labelconcept1,Concept1) ; 
+    				 list.put(labelconcept2, nlist) ;
+    			 }
+        		 
+        	}
+        	
+            
+        }
+        	SerializedLLD(list,"F:\\eclipse64\\data\\skosmappingRelation.dat") ;
+        } catch (Exception e) {
+    	e.printStackTrace();
+ 
+        }
+
+        
+        
+      }  
   public static String Read(String filename) {
 
     try {
@@ -58,11 +184,12 @@ public class ReadXMLFile {
   public static Map<String, List<String>> ReadCDR_TestSet_BioC() {
 
 	    Map<String, List<String>> goldstandard = null ;
-	    goldstandard = Deserialize("F:\\eclipse64\\eclipse\\goldstandard") ;
+	    goldstandard =  null ; //Deserialize("F:\\eclipse64\\eclipse\\goldstandardtest6") ;
 	    if (goldstandard== null )
 	    try {
 
-        String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
+        //String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
+        String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioCtest.xml" ;
 	    goldstandard  = new HashMap<String, List<String>>();
 		File fXmlFile = new File(filename);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -74,7 +201,7 @@ public class ReadXMLFile {
 		doc.getDocumentElement().normalize();
 
 		NodeList passageList = doc.getElementsByTagName("passage");
-		for (int i = 0; i < passageList.getLength() && i < 1 ; i++)
+		for (int i = 0; i < passageList.getLength()  ; i++)
 		{
 			List<String> conclist = new ArrayList<String>() ;
 			NodeList childList = passageList.item(i).getChildNodes();
@@ -117,7 +244,7 @@ public class ReadXMLFile {
 			}
            
 		}
-			Serialized(goldstandard,"F:\\eclipse64\\eclipse\\goldstandard") ;
+			Serialized(goldstandard,"F:\\eclipse64\\eclipse\\goldstandardtest6") ;
 	    } 
 	    catch (Exception e) {
 		e.printStackTrace();
@@ -249,6 +376,46 @@ public class ReadXMLFile {
 				}
 			      return dictionary;
 		   }
+		 
+			public static  void Serializedlabel(Map<String, List<Integer>> dictionary,String fileout) throws IOException
+			 {
+
+			     try
+			     {
+			    	 // Create output stream.
+			         FileOutputStream fileOut =
+			         new FileOutputStream(fileout);
+				     // Create XML encoder.
+				     XMLEncoder xenc = new XMLEncoder(fileOut);
+			
+				     // Write object.
+				     xenc.writeObject(dictionary);
+				     xenc.close();
+			         fileOut.close();
+			         System.out.printf("Serializedlabel data is saved in" + fileout);
+			     }catch(IOException i)
+			     {
+			          i.printStackTrace();
+			     }
+			 }	
+			
+			 public static  Map<String, List<Integer>> Deserializedirlabel(String fileout)
+			   {
+				 Map<String, List<Integer>> dictionary ;
+					   FileInputStream fileIn;
+					try {
+						fileIn = new FileInputStream(fileout);
+					
+					   XMLDecoder decoder =  new XMLDecoder(fileIn);
+					   dictionary  = (Map<String, List<Integer>>)decoder.readObject();
+					   decoder.close();
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return null;
+					}
+				      return dictionary;
+			   }
 	public static  void Serialized(Map<String, List<String>> dictionary,String fileout) throws IOException
 	 {
 
@@ -270,6 +437,48 @@ public class ReadXMLFile {
 	          i.printStackTrace();
 	     }
 	 }
+	
+	
+	
+	public static  void SerializedLLD(Map<String, Map<String, String>> list,String fileout) throws IOException
+	 {
+
+	     try
+	     {
+	    	 // Create output stream.
+	         FileOutputStream fileOut =
+	         new FileOutputStream(fileout);
+		     // Create XML encoder.
+		     XMLEncoder xenc = new XMLEncoder(fileOut);
+	
+		     // Write object.
+		     xenc.writeObject(list);
+		     xenc.close();
+	         fileOut.close();
+	         System.out.printf("Serialized data is saved in" + fileout);
+	     }catch(IOException i)
+	     {
+	          i.printStackTrace();
+	     }
+	 }
+	
+	 public static  Map<String, Map<String, String>> DeserializeLLD(String fileout)
+	   {
+		     HashMap<String, Map<String, String>> dictionary ;
+			   FileInputStream fileIn;
+			try {
+				fileIn = new FileInputStream(fileout);
+			
+			   XMLDecoder decoder =  new XMLDecoder(fileIn);
+			   dictionary  = (HashMap<String, Map<String, String>>) decoder.readObject();
+			   decoder.close();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		      return dictionary;
+	   }
 	
 	public static  void Serialized(HashMap<String, Map<String, List<String>>> dictionary,String fileout) throws IOException
 	 {
@@ -293,6 +502,44 @@ public class ReadXMLFile {
 	     }
 	 }
 	
+	public static  void SerializedT(Map<String, Map<String, List<String>>> dictionary,String fileout) throws IOException
+	 {
+
+	     try
+	     {
+	    	 // Create output stream.
+	         FileOutputStream fileOut =
+	         new FileOutputStream(fileout);
+		     // Create XML encoder.
+		     XMLEncoder xenc = new XMLEncoder(fileOut);
+	
+		     // Write object.
+		     xenc.writeObject(dictionary);
+		     xenc.close();
+	         fileOut.close();
+	         System.out.printf("Serialized data is saved in" + fileout);
+	     }catch(IOException i)
+	     {
+	          i.printStackTrace();
+	     }
+	 }
+	 public static  Map<String, Map<String, List<String>>> DeserializeT(String fileout)
+	   {
+		       Map<String, Map<String, List<String>>> dictionary ;
+			   FileInputStream fileIn;
+			try {
+				fileIn = new FileInputStream(fileout);
+			
+			   XMLDecoder decoder =  new XMLDecoder(fileIn);
+			   dictionary  = (Map<String, Map<String, List<String>>>) decoder.readObject();
+			   decoder.close();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		      return dictionary;
+	   }
 	 public static  Map<String, List<String>> Deserialize(String fileout)
 	   {
 			   Map<String, List<String>> dictionary ;

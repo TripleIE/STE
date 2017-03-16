@@ -94,6 +94,29 @@ public class readfiles {
 
     }
     
+    public static List<String> readLinesbylines(URL url) throws IOException
+    {
+
+        Reader fileReader = new InputStreamReader(url.openStream(), Charset.forName("UTF-8"));
+        List<String> lines;
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try 
+        {
+            lines = new ArrayList<String>();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        finally
+        {
+        }
+        
+
+        return lines;
+
+    }
+    
     /**
      * Reads the all lines from a file and places it in file as line 
      * 
@@ -225,6 +248,37 @@ public class readfiles {
             out = new BufferedWriter(fstream);
             out.write(str);
             out.newLine();
+        }
+        catch (IOException e)
+        {
+            System.err.println("Error: " + e.getMessage());
+        }
+        finally
+        {
+            if(out != null) {
+                out.close();
+            }
+        }
+
+
+    }
+    
+    public static void Writestringtofilenonewline(String str,String filename) throws IOException
+    {
+
+
+      /**************************************************************/ 
+      /* Write it to File  */
+      /**************************************************************/ 
+        BufferedWriter out = null;
+        try  
+        {
+            FileWriter fstream = new FileWriter( filename, true); //true tells to append data.
+            out = new BufferedWriter(fstream);
+            if (!str.equals("new"))
+            	out.write(str);
+            else 
+            	out.newLine();
         }
         catch (IOException e)
         {
