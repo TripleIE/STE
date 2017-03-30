@@ -30,7 +30,7 @@ public class NGramAnalyzer  {
 	    	String[] words = sentance.split("\\W+");
 						
 			if(words.length < max  )
-				max = 1 ;
+				max = words.length ;
 				
 	        for (int n = min; n <=max; n++) {
 	            for (String ngram : ngrams(n, sentance)){

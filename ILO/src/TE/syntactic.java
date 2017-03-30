@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import TextProcess.NLPEngine;
 import TextProcess.removestopwords;
 import edu.cmu.lti.ws4j.demo.SimilarityCalculationDemo;
 import util.CosineSimilarity;
@@ -45,7 +46,7 @@ public class syntactic {
 			patt = patt.replace("[x]", "!") ; 
 			patt = patt.replace("[y]", "!") ;
 			patt = patt.replace("[", "!") ;
-			String[] toks = patt.split("!") ;
+			String[] toks = patt.trim().split("!") ;
 			String startP =  toks[0].trim() ;
 			String middleP = toks[1].trim() ;
 			String endP = toks[2].trim() ;
@@ -53,7 +54,7 @@ public class syntactic {
 			if ( !startP.isEmpty() )
 			{
 				// if not empty then it should be there otherwise we skip to next pattern
-				if (StringUtils.containsIgnoreCase(Sentence, startP + " "))
+				if (StringUtils.containsIgnoreCase(Sentence, startP + " ")/*|| StringUtils.containsIgnoreCase( NLPEngine.getLemma(Sentence), startP + " ")*/)
 				{
 					Sentence = Sentence.replace(startP, "!") ;
 					String[] tokss = Sentence.split("!") ;
@@ -69,27 +70,41 @@ public class syntactic {
 			}
 			else
 			{
+				
 				Sentence = Sentence ; 
 			}
 			
-			Sentence = Sentence.trim() ;
+			Sentence = Sentence.trim().replaceAll("\\s+", " ") ;
 			// find the first encounter concept 
-			String[] tokenS = Sentence.split(" ") ;
+			//String[] tokenS = Sentence.split(" ") ;
+			
+			String Tokens[] = Sentence.split(middleP) ; 
+			Map<String, Integer> mentions = new HashMap<String, Integer>();
+			mentions = NGramAnalyzer.entities(1,5, Tokens[0] + middleP ) ;
 			Boolean foundconcept = false ; 
-			for ( String tok : tokenS)
+			String bestmatch1 = "";
+			for ( String tok : mentions.keySet())
 			{
 				if (allconcepts.containsKey(tok) )
 				{
-					RelationInstance = RelationInstance + tok + ","; 
-					Sentence = Sentence.replace(tok, "!") ;
-					String[] tokss = Sentence.split("!") ;
-					if (tokss.length > 1) 
-						Sentence = tokss[1] ;
-					else
-						Sentence = "" ;
-					foundconcept = true ; 
-					break ; 
+					if ( bestmatch1.length() < tok.length())
+					{
+						bestmatch1 = tok ;
+						foundconcept = true ; 
+						//break ;
+					}
 				}
+			}
+			
+			if ( foundconcept)
+			{
+				RelationInstance = RelationInstance + bestmatch1 + ",";
+				/*Sentence = Sentence.replace(bestmatch1 , "!") ;
+				String[] tokss = Sentence.split("!") ;
+				if (tokss.length > 1) 
+					Sentence = tokss[1] ;
+				else
+					Sentence = "" ;*/
 			}
 			
 			// no concept found 
@@ -99,11 +114,12 @@ public class syntactic {
 			Sentence = Sentence.trim() ;
 			if ( !middleP.isEmpty() )
 			{
+				String temp = NLPEngine.getLemma(Sentence) ;
 				// if not empty then it should be there otherwise we skip to next pattern
-				if (StringUtils.containsIgnoreCase(Sentence," " + middleP + " "))
+				if (StringUtils.containsIgnoreCase(Sentence," " + middleP + " ") || StringUtils.containsIgnoreCase(Sentence, middleP + " ") /*|| StringUtils.containsIgnoreCase(NLPEngine.getLemma(Sentence), middleP + " ")*/)
 				{
-					Sentence = Sentence.replace(middleP, "!") ;
-					String[] tokss = Sentence.split("!") ;
+					//Sentence = Sentence.replace(middleP, "!") ;
+					String[] tokss = Sentence.split(middleP) ;
 					if (tokss.length > 1) 
 						Sentence = tokss[1] ;
 					else
@@ -122,25 +138,40 @@ public class syntactic {
 			
 			
 			Sentence = Sentence.trim() ;
-			// find the first encounter concept 
+			// find the second encounter concept 
 			String[] tokenSs = Sentence.split(" ") ;
+			mentions = NGramAnalyzer.entities(1,5, Sentence) ;
 			Boolean foundconcept2 = false ; 
-			for ( String tok : tokenSs)
+			String bestmatch = "";
+			for ( String tok : mentions.keySet())
 			{
 				if (allconcepts.containsKey(tok) )
 				{
-					RelationInstance = RelationInstance + tok + ",";
-					Sentence = Sentence.replace(tok , "!") ;
-					String[] tokss = Sentence.split("!") ;
-					if (tokss.length > 1) 
-						Sentence = tokss[1] ;
-					else
-						Sentence = "" ;
-					
-					foundconcept2 = true ; 
-					break ; 
+					if ( bestmatch.length() < tok.length())
+					{
+						bestmatch = tok ;
+        				foundconcept2 = true ; 
+						//break ;
+					}
 				}
 			}
+			
+			
+			if ( foundconcept2)
+			{
+				RelationInstance = RelationInstance + bestmatch + ",";
+				Sentence = Sentence.replace(bestmatch , "!") ;
+				String[] tokss = Sentence.split("!") ;
+				if (tokss.length > 1) 
+					Sentence = tokss[1] ;
+				else
+					Sentence = "" ;
+				
+				foundconcept2 = true ; 
+				//break ;
+			}
+			
+			
 			
 			// no concept found 
 			if (!foundconcept2)

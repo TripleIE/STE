@@ -100,6 +100,42 @@ public class NLPEngine {
     
 	}
 	
+	public static  String  getLemma(String sentance)
+	{
+		  
+		String lemma = " " ;
+	    StanfordCoreNLP pipeline = getStanfordCoreNLP() ; 
+	    
+	    // create an empty Annotation just with the given text
+	    Annotation document = new Annotation(sentance);
+	    
+	    // run all Annotators on this text
+	    pipeline.annotate(document);
+	    
+	    // these are all the sentences in this document
+	    // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
+
+	 // these are all the sentences in this document
+	    // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
+	    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+	    Tree tree = null ; 
+	    for(CoreMap sentence: sentences)
+	    {
+	      // traversing the words in the current sentence
+	      // a CoreLabel is a CoreMap with additional token-specific methods
+	      for (CoreLabel token: sentence.get(TokensAnnotation.class)) 
+	      {
+	    	 
+	        // this is the text of the token
+	    	  lemma  += " " + token.get(LemmaAnnotation.class);    
+	      }
+	      break ;
+	    }
+		return lemma;
+
+    
+	}
+	
 	
 	public static StanfordCoreNLP  getStanfordCoreNLP()
 	{

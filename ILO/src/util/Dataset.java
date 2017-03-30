@@ -24,7 +24,7 @@ public class Dataset implements Serializable
 	public List<String>  ontology = null ; 
 	public List<String>  Hierarchy = null ; 
 	public String PrefLabel = null  ;
-	
+	Map<String, Double> Topuriconfident = null  ;
 	public void Setonto(String onto,List<String> uris )
 	{
 		NSURIs.put(onto, uris) ;
@@ -77,6 +77,10 @@ public class Dataset implements Serializable
 		uriconfident = luriconfidentin ;
 	}
 	
+	public void SetTopuriconfident(Map<String, Double> luriconfidentin )
+	{
+		Topuriconfident = luriconfidentin ;
+	}
 	public List<String>  Sorturiconfident( int top)
 	{
 		if (top > uriconfident.size())
@@ -111,5 +115,10 @@ public class Dataset implements Serializable
 	public Map<String, Double> geturiconfident()
 	{
 		return uriconfident  ; 
+	}
+	
+	public Map<String, Double> gettopuriconfident()
+	{
+		return Topuriconfident  ; 
 	}
 }

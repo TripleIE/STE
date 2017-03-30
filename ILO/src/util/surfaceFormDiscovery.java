@@ -135,7 +135,7 @@ public class surfaceFormDiscovery {
 			{
 			    // Result processing is done here.
 		         QuerySolution soln = results.nextSolution() ;
-		         surfaceForm.put((soln.get("label").toString()),1) ;
+		         surfaceForm.put((soln.get("label").asLiteral().getLexicalForm().toLowerCase()),1) ;
 		         
 		    }
 			
@@ -147,7 +147,11 @@ public class surfaceFormDiscovery {
 				surfaceForm.put(altconcept,1);
 			}*/
 			
-			for (String cpt :conceptslist)
+			
+			
+			// babelnet
+			
+/*			for (String cpt :conceptslist)
 			{
 					String key= "d079f78a-7936-449d-aa03-2286178981ae" ;
 					String term = cpt.replace(" ", "+") ; 
@@ -157,7 +161,7 @@ public class surfaceFormDiscovery {
 					if (senses != null)
 						surfaceForm.putAll(getSenses(senses)) ;
 					
-			}
+			}*/
 			
 
 			

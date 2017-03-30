@@ -25,7 +25,8 @@ import java.util.Map;
 
 public class ReadXMLFile {
     public static void main(String[] args) {
-    	ReadPMC("F:\\TempDB\\PMCxxxx\\PMC0029XXXXX\\PMC2900151.xml") ;
+    	//ReadPMC("F:\\TempDB\\PMCxxxx\\PMC0029XXXXX\\PMC2900151.xml") ;
+    	ReadCDR_TestSet_BioCDisease() ;
     }
 
     
@@ -188,8 +189,9 @@ public class ReadXMLFile {
 	    if (goldstandard== null )
 	    try {
 
-        //String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
+       // String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
         String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioCtest.xml" ;
+
 	    goldstandard  = new HashMap<String, List<String>>();
 		File fXmlFile = new File(filename);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -201,6 +203,7 @@ public class ReadXMLFile {
 		doc.getDocumentElement().normalize();
 
 		NodeList passageList = doc.getElementsByTagName("passage");
+
 		for (int i = 0; i < passageList.getLength()  ; i++)
 		{
 			List<String> conclist = new ArrayList<String>() ;
@@ -232,6 +235,7 @@ public class ReadXMLFile {
 									 conclist.add(childList2.item(kkk).getTextContent().trim().toLowerCase()) ;
 									 System.out.println(childList2.item(kkk).getTextContent()
 							                    .trim());
+
 								}
 							}
 
@@ -252,6 +256,95 @@ public class ReadXMLFile {
 	    return goldstandard;
 	  } ;
   
+	  
+	  public static Map<String, List<String>> ReadCDR_TestSet_BioCDisease() {
+
+		    Map<String, List<String>> goldstandard = null ;
+		    goldstandard =  Deserialize("F:\\eclipse64\\eclipse\\Diseaselist") ;
+		    if (goldstandard== null )
+		    try {
+
+	        String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
+	       // String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioCtest.xml" ;
+		    goldstandard  = new HashMap<String, List<String>>();
+			File fXmlFile = new File(filename);
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.parse(fXmlFile);
+	        
+			//optional, but recommended
+			//read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+			doc.getDocumentElement().normalize();
+
+			NodeList passageList = doc.getElementsByTagName("passage");
+			int count  = 0 ; 
+			for (int i = 0; i < passageList.getLength()  ; i++)
+			{
+				List<String> conclist = new ArrayList<String>() ;
+				NodeList childList = passageList.item(i).getChildNodes();
+				for (int j = 0; j < childList.getLength(); j++)
+				{
+					if ("infon".equals(childList.item(j).getNodeName()) && "title".equals(childList.item(j).getTextContent()))
+					{
+						String title = null ; 
+						NodeList childList1 = passageList.item(i).getChildNodes();
+						for (int kk = 0; kk < childList1.getLength(); kk++)
+						{
+							 System.out.println(childList1.item(kk).getNodeName());
+							if ("text".equals(childList1.item(kk).getNodeName()))
+							{
+								 System.out.println(childList1.item(kk).getTextContent()
+						                    .trim());
+								title = childList1.item(kk).getTextContent()
+					                    .trim().toLowerCase() ;
+							}
+							
+							if ("annotation".equals(childList1.item(kk).getNodeName()))
+							{
+								NodeList childList2 = childList.item(kk).getChildNodes();
+								Boolean found = false ; 
+								for (int kkk = 0; kkk < childList2.getLength(); kkk++)
+								{
+									if ("infon".equals(childList2.item(kkk).getNodeName()))
+									{
+										// conclist.add(childList2.item(kkk).getTextContent().trim().toLowerCase()) ;
+									//	 System.out.println(childList2.item(kkk).getTextContent()
+								     //               .trim());
+										 if ("Disease".equals(childList2.item(kkk).getTextContent().trim()))
+										 {
+											 found = true ; 
+
+												System.out.println(childList2.item(kkk).getTextContent()
+											                  .trim());
+										 }
+										 
+									}
+									if ("text".equals(childList2.item(kkk).getNodeName()) && found)
+									{
+										 conclist.add(childList2.item(kkk).getTextContent().trim().toLowerCase()) ;
+										 System.out.println(childList2.item(kkk).getTextContent().toLowerCase()
+								                    .trim());
+										 count++ ;
+										 found = false ;
+									}
+								}
+
+							}
+						}
+						
+						goldstandard.put(title,conclist) ;
+						
+					}
+				}
+	           
+			}
+				Serialized(goldstandard,"F:\\eclipse64\\eclipse\\Diseaselist") ;
+		    } 
+		    catch (Exception e) {
+			e.printStackTrace();
+		    }
+		    return goldstandard;
+		  } ;
   
 		public static  void Serializedsrc(Map<String, Dataset> dictionary,String fileout) throws IOException
 		 {

@@ -214,10 +214,12 @@ public class MetamapConcepts {
 		    	              if(mapEv.getNegationStatus() != 1 && mapEv.getScore() <= -300 )
 		    	              {
 		    	            	  List<String> s = mapEv.getMatchedWords() ; //mapEv.getConceptName(); 
-		    	            	  String entity ="" ;
+		    	            	  Position pos =  mapEv.getPositionalInfo().get(0) ;
+		    	            	  String entity = sentence.substring(pos.getX(), pos.getY()+pos.getX()) ;
+/*		    	            	  String entity ="" ;
 		    	            	  for (String str : s)
 		    	            		  entity += str + " " ;
-		    	            	  entity =  entity.trim() ;
+		    	            	  entity =  entity.trim() ;*/
 		    	            	   conceptsIdentified.add(entity .toLowerCase());
 		    	            	 // }
 		    	              }

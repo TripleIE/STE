@@ -37,6 +37,7 @@ public class pruning {
 		int count = 0 ; 
 	    for (String concept: uris.keySet())
    	 	{
+	    	Map<String, Double> Topconfident = new HashMap <String, Double>() ;
 	    	Map<String, Double> confident = new HashMap <String, Double>() ;
 	   		Dataset dataset = uris.get(concept) ;
    			List<String> UIRs = dataset.Sorturiconfident(3) ;
@@ -47,10 +48,12 @@ public class pruning {
 	    		double sim = Double.parseDouble(words[1]);
 	    		if ( sim > max)
 	    		{
-	    		 confident.put(words[0], sim) ;
+	    		 Topconfident.put(words[0], sim) ;
 	    		 max = sim ; 
 	    		}
+	    		confident.put(words[0], sim) ;
 	    	}
+	   		dataset.SetTopuriconfident(Topconfident);
 	   		dataset.Seturiconfident(confident);
 	   			
    	 	}

@@ -23,6 +23,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 
 import util.Dataset;
+import util.ReadXMLFile;
 import util.surfaceFormDiscovery;
 
 public class Enrichment {
@@ -38,11 +39,16 @@ public class Enrichment {
 		//LLDontology("Thrombin") ;
 		//LLDSynonym("saccular aneurysms") ;
 		// LLDHierarchy("cetirizine hydrochloride") ;
-		LLDHierarchy("hypercholesterolemia") ;
+		//LLDHierarchy("hypercholesterolemia") ;
 		//LLDHierarchy("thyroid") ;
 		//LLDSynonym("hypercholesterolemia") ;
 		// LLDHierarchy("cholesterol") ;
 		//LLDPrefLabelResource("thyroid") ;
+		
+		
+		LLDSynonymMeasure() ;
+		
+		//LLDHierarchyMeasure() ;
 		
 		
 	}
@@ -70,17 +76,71 @@ public class Enrichment {
    	 	}
 		 
 	}
+	public static void LLDHierarchyMeasure() throws IOException
+	{
+		
+		Map<String, List<String>> diseasegoldstandard = ReadXMLFile.Deserialize("F:\\eclipse64\\eclipse\\DiseaseGoldstandard") ;
+		double Recall = 0 ; 
+		double Precision  = 0 ;
+		int count = 0 ; 
+	    for (String disease: diseasegoldstandard.keySet())
+   	 	{
+	    	List<String> gold = diseasegoldstandard.get(disease) ;
+	    	List<String> Hierarchy = LLDHierarchy(disease) ; 
+	    	List<String> Hierlist = new ArrayList<String>() ;
+	   		 
+	   		if (Hierarchy != null && Hierarchy.size() > 1 )
+	   		{
+	   			for (int i = Hierarchy.size()-2 ; i > -1; i--)
+	   			{
+	   				String hier = Hierarchy.get(i) ;
+	   				String tokens[] = hier.split("!") ;
+	 	         	
+	 	         	Hierlist.add(tokens[1].toLowerCase()) ;
+	   			}
+
+	   		 List<String> ret = intersection(gold, Hierlist) ;
+	   		 count++ ;
+ 	   		 Recall += (double) ret.size()/(double) gold.size() ;
+ 	   		 Precision += (double) ret.size()/(double) Hierlist.size() ;
+ 	   		 
+	   		}
+
+  	 	}
+	    
+	    Recall = Recall / count ;
+	    Precision = Precision /count ; 
+	    
+		 
+	}	
+	
+		
+	 public static  List<String> intersection(List<String> list1, List<String> list2) {
+	        List<String> list = new ArrayList<String>();
+
+	        for (String t : list1) {
+	            if(list2.contains(t)) {
+	                list.add(t);
+	            }
+	        }
+	        return list;
+	    }
+	
+	
+	
 	
 	public static List<String> LLDHierarchy(String entity) throws IOException
 	{
 		List<String> hier = new ArrayList<String>() ;
 		String Resource = LLDPrefLabelResource(entity) ;
+		if (Resource ==  null)
+			return hier ; 
 		String tokens[] = Resource.split(" ") ;
 		String URI = tokens[0] ;
 		Model gragh = ModelFactory.createDefaultModel();
 		broader(URI,false,5, 1, gragh,hier) ;
-		System.out.println(URI + "|" + tokens[2]); 
-		hier.add(URI + "|" + tokens[2]) ;
+		System.out.println(URI + "!" + tokens[2]); 
+		hier.add(URI + "!" + tokens[2]) ;
 		return hier ; 
 		
 	}
@@ -119,16 +179,16 @@ public class Enrichment {
 	         {
 	        	 if (object.isLiteral())
 	        	 {
-	        		 hier.add(lookupresource + "|" + object) ;
-	        		System.out.println(lookupresource + "|" + object);
+	        		 hier.add(lookupresource + "!" + object) ;
+	        		System.out.println(lookupresource + "!" + object);
 	        	 }
 	        	 broader(object.toString(),object.isLiteral(),maxdepth,level,gragh,hier) ;
 	        	 
 	 	         if (!object.isLiteral())
 	 	         {
 	 	        	 
-	         	    System.out.println(object.asResource().toString() + "|"+ label.asLiteral().getString()); 
-	         	    hier.add(object.asResource().toString() + "|"+ label.asLiteral().getString()) ;
+	         	    System.out.println(object.asResource().toString() + "!"+ label.asLiteral().getString()); 
+	         	    hier.add(object.asResource().toString() + "!"+ label.asLiteral().getString()) ;
 	 	         }
 	         }
 	         
@@ -379,6 +439,61 @@ public class Enrichment {
 		return null;
 		
 	}
+	public static List<String> LLDCategorybyURI(String entity)
+	{
+
+		List<String> cats = new ArrayList<String>() ;
+		String queryString=
+				"PREFIX p: <http://dbpedia.org/property/>"+
+				"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+				"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+				"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+				"PREFIX geo: <http://www.georss.org/georss/>"+
+				"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+		        "select distinct  ?cat ?label " +
+			    "where { " +
+		                   "<" +entity + ">" +  " a ?cat." +
+		                   "<" +entity + ">" + " a skos:Concept." + 
+		                   "?cat rdfs:label|skos:prefLabel|skos:altLabel ?label" +
+		            " } " +
+		            "LIMIT 50" ;
+		
+
+		
+		// now creating query object
+		try
+		{
+			Query query = QueryFactory.create(queryString);
+			QueryExecution qexec = QueryExecutionFactory.sparqlService("http://linkedlifedata.com/sparql", query);
+			ResultSet results ;
+			qexec.setTimeout(30000);
+			results = qexec.execSelect(); 
+			for (; results.hasNext();) 
+			{
+			    // Result processing is done here.
+		         QuerySolution soln = results.nextSolution() ;
+		         String cat = soln.get("cat").toString();  //get the subject
+		         String label = soln.get("label").toString();  //get the subject
+
+		         cats.add( label.toLowerCase()) ;
+		         if ( !label.equals("Concept@en") && !label.equals("UMLS Concept") ) 
+		        	 System.out.println(label ) ;
+			}
+			return cats ;
+		}
+		catch(QueryParseException e)
+		{
+			System.out.println(e.getMessage()) ;
+		}
+		catch (Exception e)
+		{
+			System.out.println(e.getMessage()) ;
+			
+		}
+		return null;
+		
+	}
 	public static List<String> LLDDefinition(String entity)
 	{
 
@@ -431,6 +546,54 @@ public class Enrichment {
 		
 	}
 	
+	public static void LLDSynonymMeasure() throws IOException
+	{
+		
+		Map<String, List<String>> diseasegoldstandard = ReadXMLFile.Deserialize("F:\\eclipse64\\eclipse\\DiseaseGoldstandard") ;
+		double Recall = 0 ; 
+		double Precision  = 0 ;
+		int count = 0 ; 
+	    for (String disease: diseasegoldstandard.keySet())
+   	 	{
+
+	    	List<String> syn = LLDSynonym(disease) ; 
+	    	List<String> altlabel = new ArrayList<String>() ;
+	    	for ( String term : syn)
+	    	{
+	    		String [] tokens = term.split("!") ;
+	    		altlabel.add(tokens[1].toLowerCase() ) ;
+	    	}
+	    	
+	    	
+			Map<String, Integer> surfaceForm = surfaceFormDiscovery.getsurfaceFormMesh(disease) ; 
+			List<String> gold = new ArrayList<String>() ;
+			
+			for (String sysn : surfaceForm.keySet())
+			{
+				gold.add(sysn) ;
+			}
+			
+			
+			
+	   		if (gold != null && gold.size() > 0  && syn != null && syn.size() > 0)
+	   		{
+
+	   		 List<String> ret = intersection(gold, altlabel) ;
+	   		 count++ ;
+ 	   		 Recall += (double) ret.size()/(double) gold.size() ;
+ 	   		 Precision += (double) ret.size()/(double) syn.size() ;
+ 	   		 
+	   		}
+
+  	 	}
+	    
+	    Recall = Recall / count ;
+	    Precision = Precision /count ; 
+	    
+		 
+	}	
+	
+	
 	public static  List<String> LLDSynonym(String entity)
 	{
 		List<String> terms = new ArrayList<String>() ;
@@ -470,8 +633,8 @@ public class Enrichment {
 		         String term = soln.get("term").toString();  //get the subject
 		         String label = soln.get("label").toString();  //get the subject
 		         String note = soln.get("note").toString();  //get the subject
-		         terms.add( term + "|" + label + "|" + note );
-		         System.out.println(term + "|" + label + "|" + note ) ;
+		         terms.add( term + "!" + label + "!" + note );
+		         System.out.println(term + "!" + label + "!" + note ) ;
 			}
 			return terms ;
 		}

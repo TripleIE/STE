@@ -24,6 +24,26 @@ public class ontologyfactory {
 	}
 	
 	
+	public static void ontowrite(String Concept, Map<String, Dataset> lookupresources)
+	{
+
+			Dataset dataset = lookupresources.get(Concept) ;
+			Model graph = dataset.getcandidateGraph();
+			
+			graph.write(System.out, "RDF/XML-ABBREV") ; 
+	}
+	
+	public static void ontoWrite( Map<String, Dataset> lookupresources)
+	{
+		// construct whole subgraph for each concept
+		for (String concept: lookupresources.keySet())
+   	 	{
+			Dataset dataset = lookupresources.get(concept) ;
+			Model graph = dataset.getcandidateGraph();
+			graph.write(System.out, "RDF/XML-ABBREV") ; 
+   	 	}
+	}
+	
 	public static void getontosyntax(Map<String,List<String>> TripleCandidates, Map<String, Dataset> lookupresources)
 	{
 		// construct whole subgraph for each concept
@@ -63,12 +83,31 @@ public class ontologyfactory {
 		// construct whole subgraph for each concept
 		for (String rel: RelInstances)
    	 	{
+			String[] tokens = rel.split(",") ;
+   			String uri1 = ""; 
+   			
+ 		    Dataset dataset = lookupresources.get(tokens[1].trim().toLowerCase()) ;
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+ 
+	   		for (String onto: Topuriconfident.keySet())
+	   		{
+    			uri1 = onto ;
+	   		}
 			
-			  String[] tokens = rel.split(",") ;
-			  Dataset dataset = lookupresources.get(tokens[1].trim().toLowerCase()) ;
-			  Resource rec = Sentgraph.createResource(dataset.PrefLabel);
-			  final Property p = ResourceFactory.createProperty(tokens[3]) ;
-	          rec.addProperty(p, tokens[2]);	  		
+   			String uri2 = ""; 
+   			
+ 		    dataset = lookupresources.get(tokens[2].trim().toLowerCase()) ;
+   			Topuriconfident = dataset.gettopuriconfident() ;
+ 
+	   		for (String onto: Topuriconfident.keySet())
+	   		{
+    			uri2 = onto ;
+	   		}
+
+		  Resource rec1 = Sentgraph.createResource(uri1);
+		  Resource rec2 = Sentgraph.createResource(uri2);
+		  final Property p = ResourceFactory.createProperty(tokens[3]) ;
+          rec1.addProperty(p, rec2);	  		
    	 	}
 	}
 
@@ -125,21 +164,10 @@ public class ontologyfactory {
 	   		Dataset dataset = lookupresources.get(concept) ;
 	   		Model graph = dataset.getcandidateGraph();
    			String uri = ""; 
-	   		for (String onto: dataset.getonto().keySet())
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+	   		for (String onto: Topuriconfident.keySet())
 	   		{
-	   			List<String> UIRs = dataset.getontoURIs(onto) ;
-	   			double max = 0.0 ;
-
-		    	for (String URI: UIRs)
-		    	{    		
-		    		String[] words = URI.split("!");  
-		    		if (Double.parseDouble(words[1]) > max)
-		    		{
-		    			max = Double.parseDouble(words[1]) ;
-		    			uri = words[0] ; 
-		    		}
-
-		    	}
+    			uri = onto ;
 	   		}
 	   		
 	   		// set the lexical alt label
@@ -150,7 +178,7 @@ public class ontologyfactory {
 	   			for (int i = Hierarchy.size()-2 ; i > -1; i--)
 	   			{
 	   				String hier = Hierarchy.get(i) ;
-	   				String tokens[] = hier.split("|") ;
+	   				String tokens[] = hier.split("!") ;
 	   				Resource child = graph.createResource(uri);
 	   				Resource parent = graph.createResource(tokens[0]);
 	   				
@@ -159,6 +187,7 @@ public class ontologyfactory {
 	 	         	child.addProperty(p, parent);
 	 	         	final Property pp = ResourceFactory.createProperty("rdfs:label") ;
 	 	         	parent.addProperty(pp, tokens[1]);
+	 	         	uri = tokens[0] ;
 	   			}
 	   			
 	   		}
@@ -174,21 +203,11 @@ public class ontologyfactory {
 	   		Dataset dataset = lookupresources.get(concept) ;
 	   		Model graph = dataset.getcandidateGraph();
    			String uri = ""; 
-	   		for (String onto: dataset.getonto().keySet())
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+   			
+	   		for (String onto: Topuriconfident.keySet())
 	   		{
-	   			List<String> UIRs = dataset.getontoURIs(onto) ;
-	   			double max = 0.0 ;
-
-		    	for (String URI: UIRs)
-		    	{    		
-		    		String[] words = URI.split("!");  
-		    		if (Double.parseDouble(words[1]) > max)
-		    		{
-		    			max = Double.parseDouble(words[1]) ;
-		    			uri = words[0] ; 
-		    		}
-
-		    	}
+    			uri = onto ;
 	   		}
 	   		
 	   		// set the lexical alt label
@@ -216,21 +235,10 @@ public class ontologyfactory {
 	   		Dataset dataset = lookupresources.get(concept) ;
 	   		Model graph = dataset.getcandidateGraph();
    			String uri = ""; 
-	   		for (String onto: dataset.getonto().keySet())
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+	   		for (String onto: Topuriconfident.keySet())
 	   		{
-	   			List<String> UIRs = dataset.getontoURIs(onto) ;
-	   			double max = 0.0 ;
-
-		    	for (String URI: UIRs)
-		    	{    		
-		    		String[] words = URI.split("!");  
-		    		if (Double.parseDouble(words[1]) > max)
-		    		{
-		    			max = Double.parseDouble(words[1]) ;
-		    			uri = words[0] ; 
-		    		}
-
-		    	}
+    			uri = onto ;
 	   		}
 	   		
 	   		// set the lexical alt label
@@ -259,21 +267,10 @@ public class ontologyfactory {
 	   		Dataset dataset = lookupresources.get(concept) ;
 	   		Model graph = dataset.getcandidateGraph();
    			String uri = ""; 
-	   		for (String onto: dataset.getonto().keySet())
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+	   		for (String onto: Topuriconfident.keySet())
 	   		{
-	   			List<String> UIRs = dataset.getontoURIs(onto) ;
-	   			double max = 0.0 ;
-
-		    	for (String URI: UIRs)
-		    	{    		
-		    		String[] words = URI.split("!");  
-		    		if (Double.parseDouble(words[1]) > max)
-		    		{
-		    			max = Double.parseDouble(words[1]) ;
-		    			uri = words[0] ; 
-		    		}
-
-		    	}
+    			uri = onto ;
 	   		}
 	   		
 	   		// set the lexical alt label
@@ -301,30 +298,23 @@ public class ontologyfactory {
 	   		Dataset dataset = lookupresources.get(concept) ;
 	   		Model graph = dataset.getcandidateGraph();
    			String uri = ""; 
-	   		for (String onto: dataset.getonto().keySet())
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+   			
+	   		for (String onto: Topuriconfident.keySet())
 	   		{
-	   			List<String> UIRs = dataset.getontoURIs(onto) ;
-	   			double max = 0.0 ;
-
-		    	for (String URI: UIRs)
-		    	{    		
-		    		String[] words = URI.split("!");  
-		    		if (Double.parseDouble(words[1]) > max)
-		    		{
-		    			max = Double.parseDouble(words[1]) ;
-		    			uri = words[0] ; 
-		    		}
-
-		    	}
+    			uri = onto ;
 	   		}
    			
    			Map<String,List<String>> syn = new HashMap<String, List<String>>();
    			String PrefLabel = dataset.PrefLabel ;
-   			
+   			String tokens[] = PrefLabel.split(" ") ;
 			Resource rec = graph.createResource(uri);
+			Resource rec1 = graph.createResource(tokens[0]);
     		// add the property
-         	final Property p = ResourceFactory.createProperty("skos:altLabel") ;
-         	rec.addProperty(p, PrefLabel);	
+         	final Property p = ResourceFactory.createProperty("skos:PrefLabel") ;
+         	rec.addProperty(p, rec1);	
+         	final Property p1 = ResourceFactory.createProperty("skos:PrefLabel") ;
+         	rec1.addProperty(p, tokens[2]);
    	 	}
 	}
 	
@@ -337,23 +327,13 @@ public class ontologyfactory {
 	   		Dataset dataset = lookupresources.get(concept) ;
 	   		Model graph = dataset.getcandidateGraph();
    			String uri = ""; 
-	   		for (String onto: dataset.getonto().keySet())
-	   		{
-	   			List<String> UIRs = dataset.getontoURIs(onto) ;
-	   			double max = 0.0 ;
-
-		    	for (String URI: UIRs)
-		    	{    		
-		    		String[] words = URI.split("!");  
-		    		if (Double.parseDouble(words[1]) > max)
-		    		{
-		    			max = Double.parseDouble(words[1]) ;
-		    			uri = words[0] ; 
-		    		}
-
-		    	}
-	   		}
    			
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+	   		for (String onto: Topuriconfident.keySet())
+	   		{
+    			uri = onto ;
+	   		}
+
    			Map<String,List<String>> syn = new HashMap<String, List<String>>();
    			List<String> Syns = dataset.Synonym ;
 	   			
@@ -361,11 +341,11 @@ public class ontologyfactory {
    			List<String> alts = new ArrayList<String>()  ;
 	    	for (String synon: Syns)
 	    	{    		
-	    		String[] words = synon.split("|");  
+	    		String[] words = synon.split("!");  
 	    		
 	    		if (syn.containsKey(words[1].toLowerCase()))
 	    		{
-	    			alts = syn.get(syn);
+	    			alts = syn.get(words[1].toLowerCase());
 	    			if (!alts.contains(words[2].toLowerCase()))  
 	    			{
 	    				alts.add(words[2].toLowerCase()) ;

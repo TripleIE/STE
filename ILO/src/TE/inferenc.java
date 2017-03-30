@@ -581,6 +581,8 @@ public class inferenc {
 			   List<String> tempuris3 = resourcesLookupLLrec(depth,tempuris,uris3) ;
 		return  uris3 ;
 	}
+	
+	
 	public static  List<String>  resourcesLookupLLrec(int depth,List<String> uris, List<String> uris3) throws IOException
 	{	
 

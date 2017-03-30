@@ -3,6 +3,7 @@ package TE;
 import gov.nih.nlm.nls.metamap.MetaMapApi;
 import gov.nih.nlm.nls.metamap.MetaMapApiImpl;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import DS.ConceptsDiscovery;
 import DS.QueryEngine;
 import util.Dataset;
 import util.ReadXMLFile;
+import util.Sentinfo;
 import util.readfiles;
 import util.surfaceFormDiscovery;
 
@@ -251,17 +253,15 @@ public class client {
 		return model ; 
 	}
 	
+
 	
 	public static void main(String[] args) throws IOException 
 	{
 		// TODO Auto-generated method stub
 		
-		//JenaSparqlExample1("kk") ;
-		//EntityMentionDetectionBio("kk") ; 
-		//JenaSparqlExample1LLD("kk") ;
 		Map<String,Map<String,List<String>>> trainset = null ; 
 		Map<String, List<String>> titles =  ReadXMLFile.ReadCDR_TestSet_BioC()  ;
-		
+		Sentinfo sentInfo = new Sentinfo() ; 
 		
 		trainset  = ReadXMLFile.DeserializeT("F:\\eclipse64\\eclipse\\TrainsetTest") ;
 		LinkedHashMap<String, Integer> TripleDict  = new LinkedHashMap<String, Integer>();
@@ -296,7 +296,7 @@ public class client {
 		for(String title : titles.keySet())
 		{
 			
-			Model Sentgraph = ModelFactory.createDefaultModel();
+			Model Sentgraph = sentInfo.graph;
 			if (trainset.containsKey(title))
 				continue ; 
 			
@@ -310,50 +310,16 @@ public class client {
 			// this is optional and not needed here , it used to measure the concepts recall 
 			Map<String, List<String>> temptitles = new HashMap<String, List<String>>(); 
 			temptitles.put(title,GoldSndconcepts) ;
-			
-			// Khaild
-/*			Map<String,List<String>> ConcpFormstem = new HashMap<String, List<String>>();
-			Map<String,Integer> wordformstem = new HashMap<String, Integer>();
-			for (String concptem:GoldSndconcepts)
-			{
-				List<String> form1 = new ArrayList<String>()  ;
-				wordformstem  = surfaceFormDiscovery.getsurfaceFormMesh(concptem);
-				for (String form:wordformstem.keySet())
-				{
-					form1.add(form) ;
-				}
-				ConcpFormstem.put(concptem, form1)  ;
-			}
-			
-			ReadXMLFile.Serialized(ConcpFormstem, "F:\\eclipse64\\eclipse\\forms");*/
-			
+						
 			// get the concepts 
 			allconcepts  = ConceptsDiscovery.getconcepts(temptitles,api);
-
 			
-			
-			
-			//featureextractor.getFeatures(title,allconcepts);
-			
-			// Enrichment  
-/*			Map<String,List<String>> ConcpForms = new HashMap<String, List<String>>();
-			Map<String,Integer> wordforms = new HashMap<String, Integer>();
-			for (String concp:allconcepts.keySet())
-			{
-				List<String> form1 = new ArrayList<String>()  ;
-				wordforms  = surfaceFormDiscovery.getsurfaceFormMesh(concp);
-				for (String form:wordforms.keySet())
-				{
-					form1.add(form) ;
-				}
-				ConcpForms.put(concp, form1)  ;
-			}*/
-			
-			
-
+ 
 			
 			// Ontology Lookup
-			Map<String, Dataset> lookupresources =  new HashMap<String, Dataset>();
+		   Map<String, Dataset> lookupresources =  sentInfo.lookupresources ;
+			
+			
 			
 			for ( String cpt : allconcepts.keySet() )
 			{
@@ -362,86 +328,60 @@ public class client {
 			}
 			
 			
-			//ArrayList<String> RelInstances = syntactic.getSyntaticPattern(title,allconcepts) ;
-			//ontologyfactory.getontoSyntaticPattern(RelInstances,Sentgraph,lookupresources) ;
-			
-			
+				
 			// Enrichment
 			Enrichment.SemanticEnrich(lookupresources);
 			
 			// using matching RDF literals
 			lookupresources = inferenc.resourcesSemanticLookup(lookupresources) ;
-					
-			
+
 			// Ranking algorithm  
 		    	Map<String, Dataset> ret = ranking.URIRankingLLD(allconcepts,lookupresources,api) ;
 			
-			// Pruning
+			// Pruning set the most top 3 URIs
              pruning.URIspruning(lookupresources) ;
-			
-			
-			// construct whole subgraph for each concept
-/*			for (String concept: lookupresources.keySet())
-	   	 	{
-				Model model = ModelFactory.createDefaultModel();
-		   		Dataset dataset = lookupresources.get(concept) ;
-		   		
-		   		// set the lexical alt label
-		   		dataset.Setaltlebel(ConcpForms.get(concept)) ;
-		   		
-		   		for (String onto: dataset.getonto().keySet())
-		   		{
-		   			List<String> UIRs = dataset.getontoURIs(onto) ;
-			    	for (String URI: UIRs)
-			    	{    		
-			    		String[] words = URI.split("!");  
-			    		//construct the whole sub graph from a given resource in RDF Graph
-			    		dataset.SetGraph(GetSubGraph(words[0],model,2));
-			    	}
-		   		}
-		   		
-	   	 	}*/
-			
-			
-			
-			// generating onto of lexical representation as altLabels
-			//ontologyfactory.getontoAltlabel(lookupresources) ;
-			
-			// generating onto
-			//ontologyfactory.getontoassociate (lookupresources) ;
-			
-             
+
              // Syntax & syntactic match 
 			
 			triples = inferenc.TriplesRetrieval (lookupresources) ;
-		    Map<String,List<String>> Tripleresult = new HashMap<String, List<String>>();	
-			Tripleresult  = syntactic.getExactMatch(triples,lookupresources) ;
 			
-			ontologyfactory.getontosyntax(Tripleresult,lookupresources) ;
-/*			if (Tripleresult != null)
-			{
-				TripleCandidates = inferenc.addTriple (Tripleresult,TripleCandidates,"getExactMatch");
-				inferenc.printtriples(TripleCandidates) ;
-			}*/
-			
-			Tripleresult  = syntactic.getExactMatchSynonym(triples,lookupresources) ;
-			ontologyfactory.getontosyntax(Tripleresult,lookupresources) ;
-			
-/*			if (Tripleresult != null)
-			{
-				TripleCandidates = inferenc.addTriple (Tripleresult,TripleCandidates,"getExactMatch");
-				inferenc.printtriples(TripleCandidates) ;
-			}*/
+			lodtripleextraction.LODTE(lookupresources) ;
 			
 			
+		    Map<String,List<String>> Tripleresultsyn = new HashMap<String, List<String>>();	
+			Tripleresultsyn  = syntactic.getExactMatch(triples,lookupresources) ;
+			
+			
+			 Map<String,List<String>> Tripleresultsynn = new HashMap<String, List<String>>();
+			Tripleresultsynn  = syntactic.getExactMatchSynonym(triples,lookupresources) ;
+			
+			
+			
+			
+			
+			ontologyfactory.getontosyntax(Tripleresultsyn,lookupresources) ;
+			ontologyfactory.getontosyntax(Tripleresultsynn,lookupresources) ;
+			ontologyfactory.getontoSynonym (lookupresources) ;
+			ontologyfactory.getontoPreflabel(lookupresources);
+			ontologyfactory.getontodefinition(lookupresources);
+			ontologyfactory.getontoscheme(lookupresources);
+			ontologyfactory.getontoSemanticType(lookupresources);
+			ontologyfactory.getontoHierarchy(lookupresources);
+	
+			
+
 			
 			// using Syntactic patterns
 			ArrayList<String> RelInstances = syntactic.getSyntaticPattern(title,allconcepts) ;
 			ontologyfactory.getontoSyntaticPattern(RelInstances,Sentgraph,lookupresources) ;
 			
+			//Sentgraph.write(System.out, "RDF/XML-ABBREV") ;
+			//ontologyfactory.ontoWrite(lookupresources) ;
+			
+			sentInfo.getfullgraph().write(System.out, "RDF/XML-ABBREV") ;
 			
 			//semantic graph
-			for ( String cptt : allconcepts.keySet() )
+/*			for ( String cptt : allconcepts.keySet() )
 			{
 				 
 				 Dataset dataset = lookupresources.get(cptt);
@@ -453,12 +393,12 @@ public class client {
 					 GetSubGraph(topuri,model, 2) ;
 					 break ; 
 				 }	 
-			}
+			}*/
 			
 			
 			
 			//semantic graph
-			for ( String cptt : allconcepts.keySet() )
+/*			for ( String cptt : allconcepts.keySet() )
 			{
 				 
 				 Dataset dataset = lookupresources.get(cptt);
@@ -479,7 +419,7 @@ public class client {
 					 Intersection.write(System.out, "RDF/XML-ABBREV");
 				 }
 				  
-			}
+			}*/
 			
 			
 			
