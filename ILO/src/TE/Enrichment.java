@@ -46,9 +46,11 @@ public class Enrichment {
 		//LLDPrefLabelResource("thyroid") ;
 		
 		
-		LLDSynonymMeasure() ;
+		//LLDSynonymMeasure() ;
 		
 		//LLDHierarchyMeasure() ;
+		
+		LLDNarrowerHierarchy("Disease") ;
 		
 		
 	}
@@ -63,7 +65,10 @@ public class Enrichment {
 	   		dataset.Definition = LLDDefinition(concept) ;
 	   		dataset.ontology =  LLDontology(concept) ;
 	   		dataset.Category = LLDCategory (concept) ;
+	   		
+	   		// Depth-first search
 	   		dataset.Hierarchy = LLDHierarchy(concept) ; 
+	   		dataset.NHierarchy = LLDNarrowerHierarchy(concept) ; 
 	   		
 	   		
 	   		
@@ -76,6 +81,40 @@ public class Enrichment {
    	 	}
 		 
 	}
+	public static void SemanticEnrichFortopURI(Map<String, Dataset> resources) throws IOException
+	{
+	    for (String concept: resources.keySet())
+   	 	{
+	   		
+	    	Dataset dataset = resources.get(concept) ;
+   			String uri = ""; 
+   			Map<String, Double> Topuriconfident = dataset.gettopuriconfident() ;
+	   		for (String onto: Topuriconfident.keySet())
+	   		{
+    			uri = onto ;
+	   		}
+	   		
+	   		if (uri.isEmpty())
+	   			continue ; 
+
+	   		// Depth-first search
+	   		List<String>  Hierarchy = LLDHierarchyTopURI(uri,concept) ; 
+	   		List<String>   NHierarchy = LLDNHierarchyTopURI(uri,concept) ; 
+	   		if (dataset.Hierarchy.size() < Hierarchy.size() ) 
+	   		{
+	   			dataset.Hierarchy = Hierarchy ;
+	   		}
+	   		
+	   		if (dataset.NHierarchy.size() < NHierarchy.size() ) 
+	   		{
+	   			dataset.NHierarchy = NHierarchy ;
+	   		}
+	   		
+	   		
+   	 	}
+		 
+	}
+	
 	public static void LLDHierarchyMeasure() throws IOException
 	{
 		
@@ -128,9 +167,13 @@ public class Enrichment {
 	
 	
 	
-	
+
+	 
+	 
 	public static List<String> LLDHierarchy(String entity) throws IOException
-	{
+	{  
+		
+		
 		List<String> hier = new ArrayList<String>() ;
 		String Resource = LLDPrefLabelResource(entity) ;
 		if (Resource ==  null)
@@ -145,6 +188,24 @@ public class Enrichment {
 		
 	}
 	
+	public static List<String> LLDHierarchyTopURI(String entity,String Label) throws IOException
+	{  
+		
+		
+		List<String> hier = new ArrayList<String>() ;
+		String Resource = entity ;
+		if (entity ==  null || entity.isEmpty())
+			return hier ; 
+		
+
+		String URI = entity ;
+		Model gragh = ModelFactory.createDefaultModel();
+		broader(URI,false,5, 1, gragh,hier) ;
+		System.out.println(URI + "!" + Label); 
+		hier.add(URI + "!" + Label) ;
+		return hier ; 
+		
+	}
 	
 	public static void broader(String lookupresource,boolean isLiteral,int maxdepth, int level,Model gragh,List<String> hier) throws IOException 
 	{
@@ -235,6 +296,238 @@ public class Enrichment {
 			//ResultSetFormatter.out(System.out, results);
 			 return results ;
 		}
+	
+	
+	public static List<String> LLDHierarchyProperty(String entity,String Label) throws IOException
+	{  
+		
+		
+		List<String> hier = new ArrayList<String>() ;
+		String Resource = entity ;
+		if (entity ==  null || entity.isEmpty())
+			return hier ; 
+		
+
+		String URI = entity ;
+		Model gragh = ModelFactory.createDefaultModel();
+		broaderProperty(URI,false,5, 1, gragh,hier) ;
+		System.out.println(URI + "!" + Label); 
+		hier.add(URI + "!" + Label) ;
+		return hier ; 
+		
+	}
+	public static void broaderProperty(String lookupresource,boolean isLiteral,int maxdepth, int level,Model gragh,List<String> hier) throws IOException 
+	{
+		
+        if (isLiteral || maxdepth < level )
+        {
+		    	//System.out.println(object); 
+		    	return ; 
+        } 
+        
+     // create the resource
+        Resource rec = gragh.createResource(lookupresource);
+        Map<String,List<String>> nodes = new HashMap<String, List<String>>(); 
+        ResultSet results = null ; 
+        results = BroaderPropertyRel(lookupresource) ;
+        
+        ++level ;
+		for (; results != null && results.hasNext();) 
+		{
+
+//		    Statement stmt      = iter.nextStatement();  // get next statement
+//		    Resource  subject   = stmt.getSubject();     // get the subject
+//		    Property  predicate = stmt.getPredicate();   // get the predicate
+//		    RDFNode   object    = stmt.getObject();      // get the objecttain
+		    
+		    
+		    // Result processing is done here.
+	         QuerySolution soln = results.nextSolution() ;
+	         RDFNode   object    = soln.get("o");      // get the object
+	         RDFNode label    = soln.get("label");      // get the object
+	         if(object != null)
+	         {
+	        	 if (object.isLiteral())
+	        	 {
+	        		 hier.add(lookupresource + "!" + object) ;
+	        		System.out.println(lookupresource + "!" + object);
+	        	 }
+	        	 broaderProperty(object.toString(),object.isLiteral(),maxdepth,level,gragh,hier) ;
+	        	 
+	 	         if (!object.isLiteral())
+	 	         {
+	 	        	 
+	         	    System.out.println(object.asResource().toString() + "!"+ label.asLiteral().getString()); 
+	         	    hier.add(object.asResource().toString() + "!"+ label.asLiteral().getString()) ;
+	 	         }
+	         }
+
+		}
+		
+		
+	}
+	
+	
+	public static  ResultSet BroaderPropertyRel(String entity) {
+
+		//Querying remote SPARQL services	
+			ResultSet results = null ; 
+			try 
+			{
+			   //  String ontology_service = "http://lod.openlinksw.com/sparql";
+			 //  String ontology_service = "http://sparql.hegroup.org/sparql/";
+			     String ontology_service = "http://linkedlifedata.com/sparql";
+			
+			String sparqlQuery=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>" +
+				    //"select distinct  ?o ?p where {<http://dbpedia.org/resource/Michelle_Obama> ?p ?o. } ";
+			        "select distinct  ?o ?label where { <" + entity +  "> rdfs:subPropertyOf  ?o.  ?o rdfs:label ?label} ";
+
+			QueryExecution x = QueryExecutionFactory.sparqlService(ontology_service, sparqlQuery);
+			 results = x.execSelect();
+			}
+			catch(QueryParseException e)
+			{
+				System.out.println(e.getMessage()); 
+				return null ; 
+			}
+			catch (Exception e)
+			{
+				System.out.println(e.getMessage()); 
+				 return null ; 
+			}
+			//ResultSetFormatter.out(System.out, results);
+			 return results ;
+		}
+	public static List<String> LLDNHierarchyTopURI(String entity,String Label) throws IOException
+	{  
+		
+		
+		List<String> hier = new ArrayList<String>() ;
+		if (entity ==  null || entity.isEmpty())
+			return hier ; 
+		
+
+		String URI = entity ;
+		Model gragh = ModelFactory.createDefaultModel();
+		narrower(URI,false,5, 1, gragh,hier) ;
+		System.out.println(URI + "!" + Label); 
+		hier.add(URI + "!" + Label) ;
+		return hier ; 
+		
+	}
+	
+	public static List<String> LLDNarrowerHierarchy(String entity) throws IOException
+	{
+		List<String> hier = new ArrayList<String>() ;
+		String Resource = LLDPrefLabelResource(entity) ;
+		if (Resource ==  null)
+			return hier ; 
+		String tokens[] = Resource.split(" ") ;
+		String URI = tokens[0] ;
+		Model gragh = ModelFactory.createDefaultModel();
+		narrower(URI,false,10, 1, gragh,hier) ;
+		System.out.println(URI + "!" + tokens[2]); 
+		hier.add(URI + "!" + tokens[2]) ;
+		return hier ; 
+		
+	}
+	public static void narrower(String lookupresource,boolean isLiteral,int maxdepth, int level,Model gragh,List<String> hier) throws IOException 
+	{
+		
+        if (isLiteral || maxdepth < level )
+        {
+		    	//System.out.println(object); 
+		    	return ; 
+        } 
+        
+     // create the resource
+        Resource rec = gragh.createResource(lookupresource);
+        Map<String,List<String>> nodes = new HashMap<String, List<String>>(); 
+        ResultSet results = null ; 
+        results = NarrowerRel(lookupresource) ;
+        
+        ++level ;
+		for (; results != null && results.hasNext();) 
+		{
+
+//		    Statement stmt      = iter.nextStatement();  // get next statement
+//		    Resource  subject   = stmt.getSubject();     // get the subject
+//		    Property  predicate = stmt.getPredicate();   // get the predicate
+//		    RDFNode   object    = stmt.getObject();      // get the objecttain
+		    
+		    
+		    // Result processing is done here.
+	         QuerySolution soln = results.nextSolution() ;
+	         RDFNode   object    = soln.get("o");      // get the object
+	         RDFNode label    = soln.get("label");      // get the object
+	         if(object != null)
+	         {
+	        	 if (object.isLiteral())
+	        	 {
+	        		 hier.add(lookupresource + "!" + object) ;
+	        		System.out.println(lookupresource + "!" + object);
+	        	 }
+	        	 narrower(object.toString(),object.isLiteral(),maxdepth,level,gragh,hier) ;
+	        	 
+	 	         if (!object.isLiteral())
+	 	         {
+	 	        	 
+	         	    System.out.println(object.asResource().toString() + "!"+ label.asLiteral().getString()); 
+	         	    hier.add(object.asResource().toString() + "!"+ label.asLiteral().getString()) ;
+	 	         }
+	         }
+	         
+	         return ;
+		}
+		
+		
+	}
+	
+	public static  ResultSet NarrowerRel(String entity) {
+
+		//Querying remote SPARQL services	
+			ResultSet results = null ; 
+			try 
+			{
+			   //  String ontology_service = "http://lod.openlinksw.com/sparql";
+			 //  String ontology_service = "http://sparql.hegroup.org/sparql/";
+			     String ontology_service = "http://linkedlifedata.com/sparql";
+			
+			String sparqlQuery=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>" +
+				    //"select distinct  ?o ?p where {<http://dbpedia.org/resource/Michelle_Obama> ?p ?o. } ";
+			        "select distinct  ?o ?label where {<" + entity +  "> skos:narrower  ?o.  ?o rdfs:label ?label} ";
+
+			QueryExecution x = QueryExecutionFactory.sparqlService(ontology_service, sparqlQuery);
+			 results = x.execSelect();
+			}
+			catch(QueryParseException e)
+			{
+				System.out.println(e.getMessage()); 
+				return null ; 
+			}
+			catch (Exception e)
+			{
+				System.out.println(e.getMessage()); 
+				 return null ; 
+			}
+			//ResultSetFormatter.out(System.out, results);
+			 return results ;
+		}
+	
 	public static String LLDPrefLabelResource(String entity)
 	{
 
@@ -561,7 +854,8 @@ public class Enrichment {
 	    	for ( String term : syn)
 	    	{
 	    		String [] tokens = term.split("!") ;
-	    		altlabel.add(tokens[1].toLowerCase() ) ;
+	    		if (!altlabel.contains(tokens[1].toLowerCase()))
+	    			altlabel.add(tokens[1].toLowerCase() ) ;
 	    	}
 	    	
 	    	
@@ -570,7 +864,8 @@ public class Enrichment {
 			
 			for (String sysn : surfaceForm.keySet())
 			{
-				gold.add(sysn) ;
+				if (!gold.contains(sysn.toLowerCase()))
+					gold.add(sysn.toLowerCase()) ;
 			}
 			
 			
@@ -581,7 +876,7 @@ public class Enrichment {
 	   		 List<String> ret = intersection(gold, altlabel) ;
 	   		 count++ ;
  	   		 Recall += (double) ret.size()/(double) gold.size() ;
- 	   		 Precision += (double) ret.size()/(double) syn.size() ;
+ 	   		 Precision += (double) ret.size()/(double) altlabel.size() ;
  	   		 
 	   		}
 
@@ -646,5 +941,8 @@ public class Enrichment {
 		
 		
 	}
+
+	
+	
 	
 }

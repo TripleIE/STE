@@ -30,6 +30,9 @@ import com.hp.hpl.jena.rdf.model.ResourceFactory;
 
 public class graph {
 
+	static String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#" ;
+	static String LD = "http://www.linkeddatatools.com/colors#" ;
+	static String   LOD = "http://www.linkeddatatools.com/clothing-features# " ; 
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 
@@ -49,20 +52,21 @@ public class graph {
    	   
 	   Model candidategraphB = ModelFactory.createDefaultModel(); 
 
-   	   Resource whiteB = candidategraphB.createResource("http://www.linkeddatatools.com/colors#white");
-   	   final Property pwhiteB = ResourceFactory.createProperty("http://www.linkeddatatools.com/clothing-features#color") ;
+   	   Resource whiteB = candidategraphB.createResource(rdf + "white");
+   	   final Property pwhiteB = ResourceFactory.createProperty(rdf + "color") ;
    	   whiteB.addProperty(pwhiteB,"white");
 	   
 	   
-	   Resource recB = candidategraphB.createResource("http://www.linkeddatatools.com/clothes#shirt");
-   	   final Property pB1 = ResourceFactory.createProperty("http://www.linkeddatatools.com/clothing-features#size") ;
+	   Resource recB = candidategraphB.createResource(rdf + "shirt");
+   	   final Property pB1 = ResourceFactory.createProperty(LOD + "size") ;
    	   recB.addProperty(pB1,"13");
-
+   	   candidategraphB.setNsPrefix( "rdf", rdf ) ;
+   	   candidategraphB.setNsPrefix( "LOD", LOD ) ;
    	   
-   	   final Property pB2 = ResourceFactory.createProperty("http://www.linkeddatatools.com/clothing-features#color") ;
+   	   final Property pB2 = ResourceFactory.createProperty(LOD + "color") ;
    	   recB.addProperty(pB2,whiteB);
 
-   	   //candidategraphB.write(System.out, "RDF/XML-ABBREV") ;  
+   	    candidategraphB.write(System.out, "RDF/XML-ABBREV") ;  
   	   
    	   
 		Model Intersection = candidategraphB.union(candidategraphA);

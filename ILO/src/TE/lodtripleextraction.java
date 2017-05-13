@@ -28,6 +28,7 @@ public class lodtripleextraction {
 	
 	public static List<String> LODTE(Map<String, Dataset> resources)
 	{
+		
 		List<String> Candidatetriple = new ArrayList<String>() ;
 		Map<String,List<String>> tempconcepts = new HashMap <String, List<String>>() ;
 		Map<String, Dataset> tempresources = new HashMap<String, Dataset>() ;
@@ -48,8 +49,9 @@ public class lodtripleextraction {
 
 			 try 
 			 {
-				 BreadthFirstSearch(1,objs,  uris3,concept) ;
+				 BreadthFirstSearch(3,objs,  uris3,concept) ;
 
+				 // we do URI matching between the topconfidentURI 
 				 if (URImatch (concept, uris3,resources, Candidatetriple,objs) )
 					 continue ; 
 				 else if (PrefLabelmatch (concept,uris3,resources, Candidatetriple,objs) )
@@ -90,7 +92,7 @@ public class lodtripleextraction {
 			 // match it with others concepts
 			 for (String cpt : tempresources.keySet())
 			 {
-				 
+				 // if the match concept is the input concept then skip
 				 if ( concept.toLowerCase() == cpt.toLowerCase())
 					 continue ; 
 				 

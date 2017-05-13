@@ -735,12 +735,20 @@ public class inferenc {
 			   List<String> uris5 = new ArrayList<String>() ;
 			   
 			   Dataset dataset =  lookupresources.get(concept);
-			   surfaceForm  = surfaceFormDiscovery.getsurfaceFormLLD(concept); 
+			   surfaceForm  =  surfaceFormDiscovery.getsurfaceFormLLD(concept); // new HashMap<String, Integer>() ;
+			  // surfaceForm.put(concept, 1) ;
+			   int limitCount = 0 ;
 			   if (surfaceForm != null)
 			   {
 				   
 				  for(String term : surfaceForm.keySet()) 
 				   {
+					  
+					  // we here limited only for the first 40 altlabel 
+/*					  limitCount++ ;
+					  if (limitCount == 10 )
+						  break ; */
+					  
 					   //String term = concept ;
 					   String[] tokens  = term.split("@") ;
 					   term = tokens[0] ;
@@ -755,29 +763,44 @@ public class inferenc {
 					   
 						 if ( tempuris != null && tempuris.size() > 0 ) 
 						 {
+							 if(!uris.contains(tempuris))
 		                      uris.addAll(tempuris) ; 
 						 }
 						 if ( tempuris1 != null && tempuris1.size() > 0 )  
 						 {
-		                     uris1.addAll(tempuris1) ;
+							 if(!uris1.contains(tempuris1))
+							  uris1.addAll(tempuris1) ;
 						 }
 						 if ( tempuris2 != null && tempuris2.size() > 0)  
 						 {
-		                     uris2.addAll(tempuris2) ;
+							 if(!uris2.contains(tempuris2))
+		                      uris2.addAll(tempuris2) ;
 						 }
 						 if ( tempuris3 != null && tempuris3.size() > 0)  
 						 {
-		                     uris3.addAll(tempuris3) ;
+							 
+							 for (String uri : tempuris3)
+							 {
+								 
+								 if(!uris3.contains(uri))
+									 uris3.add(uri) ;
+							 }
+							 
+							 break ; 
+							 
+
 		                     
 						 }
 						 if ( tempuris4 != null && tempuris4.size() > 0)  
 						 {
-		                     uris4.addAll(tempuris4) ;
+							 if(!uris4.contains(tempuris4))
+								 uris4.addAll(tempuris4) ;
 		                     
 						 }
 						 if ( tempuris5 != null && tempuris5.size() > 0)  
 						 {
-		                     uris5.addAll(tempuris5) ;
+							 if(!uris5.contains(tempuris5))
+								 uris5.addAll(tempuris5) ;
 		                     
 						 }
 				   }

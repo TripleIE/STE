@@ -189,8 +189,8 @@ public class ReadXMLFile {
 	    if (goldstandard== null )
 	    try {
 
-       // String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
-        String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioCtest.xml" ;
+       String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioC.xml" ;
+       // String filename = "F:\\eclipse64\\eclipse\\CDR_TestSet.BioCtest.xml" ;
 
 	    goldstandard  = new HashMap<String, List<String>>();
 		File fXmlFile = new File(filename);

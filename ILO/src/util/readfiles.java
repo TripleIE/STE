@@ -105,7 +105,8 @@ public class readfiles {
             lines = new ArrayList<String>();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                lines.add(line);
+            	if (!line.trim().isEmpty())
+                  lines.add(line);
             }
         }
         finally

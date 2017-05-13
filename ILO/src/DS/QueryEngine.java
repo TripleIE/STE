@@ -264,7 +264,7 @@ public class QueryEngine {
 		{
 			List<String> Linkuris = new ArrayList<String>() ;
 			
-			String queryString=
+/*			String queryString=
 					"PREFIX p: <http://dbpedia.org/property/>"+
 					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
 					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
@@ -281,6 +281,22 @@ public class QueryEngine {
 				        + " ?concept1 a skos:Concept."
 				      //  + " ?concept2 a skos:Concept."
 				      //  + " FILTER(?concept1 != ?concept2)"
+			            + " } " +
+			            "LIMIT " +  Integer.toString(limit) ;*/
+			
+			
+			String queryString=
+					"PREFIX p: <http://dbpedia.org/property/>"+
+					"PREFIX dbpedia: <http://dbpedia.org/resource/>"+
+					"PREFIX category: <http://dbpedia.org/resource/Category:>"+
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+					"PREFIX skos: <http://www.w3.org/2004/02/skos/core#>"+
+					"PREFIX geo: <http://www.georss.org/georss/>"+
+					"PREFIX w3: <http://www.w3.org/2002/07/owl#>"+
+			        "select Distinct ?concept1  " +
+				    "where { " 
+				        + " ?concept1 skos:altLabel|skos:prefLabel|rdfs:label "   + "\"" +   entity +  "\"."  
+				        + " ?concept1 a skos:Concept."
 			            + " } " +
 			            "LIMIT " +  Integer.toString(limit) ;
 

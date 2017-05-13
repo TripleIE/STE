@@ -211,7 +211,7 @@ public class MetamapConcepts {
 		    	              */
 		    	              
 		    	              
-		    	              if(mapEv.getNegationStatus() != 1 && mapEv.getScore() <= -300 )
+		    	              if(mapEv.getNegationStatus() != 1 && mapEv.getScore() <= -700 )
 		    	              {
 		    	            	  List<String> s = mapEv.getMatchedWords() ; //mapEv.getConceptName(); 
 		    	            	  Position pos =  mapEv.getPositionalInfo().get(0) ;

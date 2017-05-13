@@ -256,7 +256,11 @@ public class client {
 
 	
 	public static void main(String[] args) throws IOException 
+	
 	{
+		
+		
+		Khalidtest() ; 
 		// TODO Auto-generated method stub
 		
 		Map<String,Map<String,List<String>>> trainset = null ; 
@@ -293,6 +297,9 @@ public class client {
 		
 		int count  = 0 ;
 		Model candidategraph = ModelFactory.createDefaultModel(); 
+		
+		Map<String,List<String>> CandidatetriplePerSent = new HashMap <String, List<String>>() ;
+		int foundcount  = 0 ;
 		for(String title : titles.keySet())
 		{
 			
@@ -345,10 +352,15 @@ public class client {
 			
 			triples = inferenc.TriplesRetrieval (lookupresources) ;
 			
-			lodtripleextraction.LODTE(lookupresources) ;
+			List<String> Candidatetriple = lodtripleextraction.LODTE(lookupresources) ;
 			
+			if (Candidatetriple.size() > 0)
+			{
+				CandidatetriplePerSent.put(title,Candidatetriple) ;
+				foundcount++ ;
+			}
 			
-		    Map<String,List<String>> Tripleresultsyn = new HashMap<String, List<String>>();	
+/*		    Map<String,List<String>> Tripleresultsyn = new HashMap<String, List<String>>();	
 			Tripleresultsyn  = syntactic.getExactMatch(triples,lookupresources) ;
 			
 			
@@ -372,13 +384,17 @@ public class client {
 
 			
 			// using Syntactic patterns
-			ArrayList<String> RelInstances = syntactic.getSyntaticPattern(title,allconcepts) ;
-			ontologyfactory.getontoSyntaticPattern(RelInstances,Sentgraph,lookupresources) ;
+			ArrayList<String> RelInstances = SyntaticPattern.getSyntaticPattern(title,allconcepts) ;
+			ontologyfactory.getontoSyntaticPattern(RelInstances,Sentgraph,lookupresources) ;*/
+			
+			
+			
+			
 			
 			//Sentgraph.write(System.out, "RDF/XML-ABBREV") ;
 			//ontologyfactory.ontoWrite(lookupresources) ;
 			
-			sentInfo.getfullgraph().write(System.out, "RDF/XML-ABBREV") ;
+			//#sentInfo.getfullgraph().write(System.out, "RDF/XML-ABBREV") ;
 			
 			//semantic graph
 /*			for ( String cptt : allconcepts.keySet() )
@@ -448,11 +464,254 @@ public class client {
 			}*/
 			
 
+			if (foundcount > 10 )
+			{
+					ReadXMLFile.Serialized(CandidatetriplePerSent,"F:\\eclipse64\\eclipse\\LODRel");
+					foundcount = 0 ;
+			}
 		}
 
 	}
 	
 	
+	public static void Khalidtest() throws IOException 
+	{
+		// TODO Auto-generated method stub
+		
+		Map<String,Map<String,List<String>>> trainset = null ; 
+		//Map<String, List<String>> titles =  ReadXMLFile.ReadCDR_TestSet_BioC()  ;
+		Sentinfo sentInfo = new Sentinfo() ; 
+		
+		//trainset  = ReadXMLFile.DeserializeT("F:\\eclipse64\\eclipse\\TrainsetTest") ;
+		
+		   File fFile = new File("F:\\eclipse64\\eclipse\\khalidtest.txt");
+		   String note = readfiles.readLinestostring(fFile.toURL());
+		
+		
+		
+		
+		LinkedHashMap<String, Integer> TripleDict  = new LinkedHashMap<String, Integer>();
+		Map<String,List<Integer>> Labeling= new HashMap<String,List<Integer>>() ;
+		
+		MetaMapApi api = new MetaMapApiImpl();
+		List<String> theOptions = new ArrayList<String>();
+	    theOptions.add("-y");  // turn on Word Sense Disambiguation
+	    theOptions.add("-u");  //  unique abrevation 
+	    theOptions.add("--negex");  
+	    theOptions.add("-v");
+	    theOptions.add("-c");   // use relaxed model that  containing internal syntactic structure, such as conjunction.
+	    if (theOptions.size() > 0) {
+	      api.setOptions(theOptions);
+	    }
+	    
+		
+		if (trainset == null )
+		{
+			trainset = new HashMap<String, Map<String,List<String>>>();
+		}
+		
+		
+		int count  = 0 ;
+		Model candidategraph = ModelFactory.createDefaultModel(); 
+		
+		Map<String,List<String>> CandidatetriplePerSent = new HashMap <String, List<String>>() ;
+		int foundcount  = 0 ;
+		
+			String[] Sents ;
+			
+			String[] Sentences =  note.split("\\.") ;
+			
+			if (Sentences.length == 0 )
+				Sentences = note.split("",1) ;
+				
+			for(String title : Sentences)
+			{
+				if (title.trim().isEmpty())
+					continue ; 
+				
+				
+				Model Sentgraph = sentInfo.graph;
+				if (trainset.containsKey(title))
+					continue ; 
+				
+				count++ ; 
+				Map<String,List<String>> TripleCandidates = new HashMap<String, List<String>>();
+				Map<String, List<String>> triples = null ;
+				// get the goldstandard concepts for current title 
+				List<String> GoldSndconcepts = null ;  
+				Map<String, Integer> allconcepts = null ; 
+				
+				// this is optional and not needed here , it used to measure the concepts recall 
+				Map<String, List<String>> temptitles = new HashMap<String, List<String>>(); 
+				temptitles.put(title,GoldSndconcepts) ;
+							
+				// get the concepts 
+				allconcepts  = ConceptsDiscovery.getconcepts(temptitles,api);
+
+				// Ontology Lookup
+			   Map<String, Dataset> lookupresources =  sentInfo.lookupresources ;
+				
+				
+				
+				for ( String cpt : allconcepts.keySet() )
+				{
+					 Dataset dataset = new Dataset();
+					 lookupresources.put(cpt, dataset) ;
+				}
+				
+				
+					
+				// Enrichment
+				Enrichment.SemanticEnrich(lookupresources);
+				
+				// using matching RDF literals
+				lookupresources = inferenc.resourcesSemanticLookup(lookupresources) ;
+	
+				// Ranking algorithm  
+			    	Map<String, Dataset> ret = ranking.URIRankingLLD(allconcepts,lookupresources,api) ;
+				
+				// Pruning set the most top 3 URIs
+	             pruning.URIspruning(lookupresources) ;
+	             
+
+	            Enrichment.SemanticEnrichFortopURI(lookupresources) ;
+	            
+	            
+	           ontologyfactory.getontoclass(lookupresources) ;
+	           
+	           ontologyfactory.getontosameAs(lookupresources) ;
+	 		   ontologyfactory.getontoSynonym (lookupresources) ;
+	 			
+                
+		 	   ontologyfactory.getontoPreflabel(lookupresources);
+
+	 		   ontologyfactory.getontodefinition(lookupresources);
+
+	 		   ontologyfactory.getontoscheme(lookupresources);
+
+	 		   ontologyfactory.getontoSemanticType(lookupresources);
+
+	 		   ontologyfactory.getontoHierarchy(lookupresources);
+	 			
+	 		   ontologyfactory.getontoNHierarchy(lookupresources); 
+
+	 		   ontologyfactory.ontoWriteWholetofile(lookupresources, candidategraph);
+	             
+	
+	             // Syntax & syntactic match 
+				
+	    /*		triples = inferenc.TriplesRetrieval (lookupresources) ;
+				
+				List<String> Candidatetriple = lodtripleextraction.LODTE(lookupresources) ;
+				
+				if (Candidatetriple.size() > 0)
+				{
+					CandidatetriplePerSent.put(title,Candidatetriple) ;
+					foundcount++ ;
+				}
+				
+			    Map<String,List<String>> Tripleresultsyn = new HashMap<String, List<String>>();	
+				Tripleresultsyn  = syntactic.getExactMatch(triples,lookupresources) ;
+				
+				
+				 Map<String,List<String>> Tripleresultsynn = new HashMap<String, List<String>>();
+				Tripleresultsynn  = syntactic.getExactMatchSynonym(triples,lookupresources) ;
+				
+				
+				ontologyfactory.getontosyntax(Tripleresultsyn,lookupresources) ;
+	 			ontologyfactory.getontosyntax(Tripleresultsynn,lookupresources) ;
+				
+	
+		
+				
+	
+				
+				// using Syntactic patterns
+				ArrayList<String> RelInstances = SyntaticPattern.getSyntaticPattern(title,allconcepts) ;
+				ontologyfactory.getontoSyntaticPattern(RelInstances,Sentgraph,lookupresources) ;*/
+				
+				
+				
+				
+				
+				//Sentgraph.write(System.out, "RDF/XML-ABBREV") ;
+				//ontologyfactory.ontoWrite(lookupresources) ;
+				
+				//#sentInfo.getfullgraph().write(System.out, "RDF/XML-ABBREV") ;
+				
+				//semantic graph
+	/*			for ( String cptt : allconcepts.keySet() )
+				{
+					 
+					 Dataset dataset = lookupresources.get(cptt);
+					 Model model = dataset.getGraph() ;
+					 Map<String, Double> TopUris= dataset.geturiconfident() ;
+					 
+					 for (String topuri : TopUris.keySet())
+					 {
+						 GetSubGraph(topuri,model, 2) ;
+						 break ; 
+					 }	 
+				}*/
+				
+				
+				
+				//semantic graph
+	/*			for ( String cptt : allconcepts.keySet() )
+				{
+					 
+					 Dataset dataset = lookupresources.get(cptt);
+					 Model model = dataset.getGraph() ;
+					 Map<String, Double> TopUris= dataset.geturiconfident() ;
+					 
+					 model.write(System.out, "RDF/XML-ABBREV") ;
+					 
+					 
+					 for ( String cpttin : allconcepts.keySet() )
+					 {
+						 if (cptt.equals(cpttin))
+							 continue ; 
+						 
+						 Dataset datasetin = lookupresources.get(cpttin);
+						 Model modelin = datasetin.getGraph() ;
+						 Model Intersection = model.intersection(modelin);
+						 Intersection.write(System.out, "RDF/XML-ABBREV");
+					 }
+					  
+				}*/
+				
+				
+				
+				
+				
+		/* 		Tripleresult  =  syntactic.getSimilairMatch(triples,title) ;
+				if (Tripleresult != null)
+				{
+					TripleCandidates = inferenc.addTriple (Tripleresult,TripleCandidates,"SimilairMatch"); 
+					inferenc.printtriples(TripleCandidates) ;
+				}
+	
+	
+					
+				Tripleresult  =  semantic.getSemanticMatch(triples,title) ;
+				if (Tripleresult != null)
+					TripleCandidates = inferenc.addTriple (Tripleresult,TripleCandidates,"getSemanticMatch"); 
+	
+				
+				//TripleCandidates = inferenc.getProperty(TripleCandidates) ;
+				trainset.put(title, TripleCandidates) ;
+				if (count> 30 )
+				{
+						ReadXMLFile.SerializedT(trainset,"F:\\eclipse64\\eclipse\\Trainset") ;
+						count = 0 ;
+				}*/
+				
+			}
+			
+			int i = 0 ; 
+			i++ ; 
+
+	}
 	public static void trainxmllabeling (Map<String,Map<String,List<String>>> trainset,Map<String, Integer> bagofwords) throws IOException
 	{
 		LinkedHashMap<String, Integer> TripleDict  = new LinkedHashMap<String, Integer>();

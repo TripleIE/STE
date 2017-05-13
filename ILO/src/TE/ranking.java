@@ -160,8 +160,17 @@ public class ranking {
 	   			List<String> UIRs = dataset.getontoURIs(onto) ;
 		    	for (String URI: UIRs)
 		    	{
+		    		
+		    		 if (URI.contains("http://linkedlifedata.com/resource/#"))
+		    			 continue ; 
+		    		 
+		    		 
 		    	     ResultSet results1 = QueryEngine.UMLSsemantictype(URI,onto);
 		    	     List<String> semantictype =  new ArrayList<String>() ;
+		    	     
+		    	     if(results1 == null)
+		    	    	 continue ;
+		    	     
 	    	         for (; results1.hasNext();) 
 	    	         {
 

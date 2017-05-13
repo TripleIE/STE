@@ -190,6 +190,7 @@ public class ConceptsDiscovery {
 		HashMap<String, Map<String, List<String>>> diectwithtitle = new HashMap<String, Map<String, List<String>>>();
 		for(String title : titles)
 		{
+			title = title.toLowerCase() ;
 			String orgTitle = title ;
 			Map<String, Integer> allconcepts = new HashMap<String, Integer>();
 			counter++ ; 
@@ -304,6 +305,10 @@ public class ConceptsDiscovery {
 
 		for(String title : titles.keySet())
 		{
+			if ( title == null || title.isEmpty())
+				continue ; 
+			
+			title = title.toLowerCase() ;
 			Tree parsertree = nlpprocessor.getParseTreeSentence(title) ;
 			List<String> verbs = new ArrayList<String>() ;
 			nlpprocessor.getVerbs(parsertree, verbs);
@@ -369,41 +374,6 @@ public class ConceptsDiscovery {
 				allconcepts.putAll(lodconcepts);
 				
 
-				
-				
-				// measure the recall precision and  F-measure 
-				double relevent = 0 ;
-				for( String concept : allconcepts.keySet())
-				{
-/*	               if (GoldSndconcepts.contains(concept.toLowerCase().replace("-", " ")))
-	               {
-	            	   relevent++ ; 
-	               }*/
-					
-					for( String Gconcept : GoldSndconcepts)
-					{
-						 if (Gconcept.replace("-", " ").equals(concept.toLowerCase()) )
-			               {
-			            	   relevent++ ; 
-			               }
-					}
-					
-				}
-				
-				// calculate the Recall 
-				//For example for text search on a set of documents recall is the number of correct results divided by the number of results that should have been returned
-				double recall = 0 ;
-				if(GoldSndconcepts.size() > 0)
-				   recall = relevent / GoldSndconcepts.size() ;
-				avgRecall += recall ; 
-				double precision = 0 ;
-				if(allconcepts.size() > 0)
-				    precision = relevent / allconcepts.size() ; 
-				avgPrecision += precision ;	
-				double Fmeasure = 0 ;
-				if(precision + recall > 0)
-				   Fmeasure = 2* ((precision * recall) / (precision + recall)) ;
-				avgFmeasure += Fmeasure ;
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
